@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test CCU</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  <script language="JavaScript" type="text/javascript" src="https://dev.jonnattan.com/ccu/ccu.js"></script>
+</head>
+
+<body style="background-color:#f6fcf6;">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+    crossorigin="anonymous"></script>
+  <!-- Menu principal -->
+  <div class="container" style="padding: 5px 0px 10px 0px;">
+    <nav class="navbar navbar-expand-lg bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#main">Principal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="https://dev.jonnattan.com">Jonnattan</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                Elige un rut
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/15173808-7">15173808-7</a></li>
+                <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/13778103-4">13778103-4</a></li>
+                <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/10283513-1">10283513-1</a></li>
+                <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/7992784-8">7992784-8</a></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" href="#fondo">Otras pruebas</a></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled">Disabled</a>
+            </li>
+          </ul>
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Rut</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <!-- Testeo de document manager -->
+  <div class="container"
+    style="padding:10px 0px 0px 0px; background-color: #ffffff; border-style: none; border-radius: 10px;">
+    <!-- En caso de errores ac'a se muestran -->
+    <div class="alert alert-danger" id="msgError" role="alert" hidden>
+      Error interno del sistema, mire los logs haciendo clic derecho -> Inspeccionar.
+    </div>
+    <p class="text-start">Document Manager</p>
+    <form class="row">
+      <div class="row">
+        <div class="col">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Rut
+              Cliente&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Rut con guión, sin puntos" aria-label="Rut de Usuario"
+              aria-describedby="basic-addon1" id="docRut" value="{{rut}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Nombre Cliente&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Nombre Completo" aria-label="Nombre Completo"
+              aria-describedby="basic-addon1" id="docName" value="{{name}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Dirección Partícular</span>
+            <input type="text" class="form-control" placeholder="Dirección Partícular" aria-label="Dirección Partícular"
+              aria-describedby="basic-addon1" id="docAddress" value="{{address}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Dirección Comercial</span>
+            <input type="text" class="form-control" placeholder="Dirección Comercial" aria-label="Dirección Comercial"
+              aria-describedby="basic-addon1" id="docComAddress" value="{{adrcom}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Comuna Cliente&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Comuna" aria-label="Comuna"
+              aria-describedby="basic-addon1" id="docCommune" value="{{commune}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Teléfono Partícular&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Teléfono Partícular" aria-label="Teléfono Partícular"
+              aria-describedby="basic-addon1" id="docPhone" value="{{phone}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Teléfono
+              Célular&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Teléfono Célular" aria-label="Teléfono Célular"
+              aria-describedby="basic-addon1" id="docMobile" value="{{mobile}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Fecha Nacimiento</span>
+            <input type="text" class="form-control" placeholder="Fecha Nacimiento" aria-label="Fecha Nacimiento"
+              aria-describedby="basic-addon1" id="docNacimiento" value="{{birth}}">
+          </div>
+        </div>
+        <div class="col">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Teléfono Comercial</span>
+            <input type="text" class="form-control" placeholder="Teléfono Comercial" aria-label="Teléfono Comercial"
+              aria-describedby="basic-addon1" id="docComPhone" value="{{phone}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Correo Electrónico</span>
+            <input type="text" class="form-control" placeholder="Email del Cliente" aria-label="Email del Cliente"
+              aria-describedby="basic-addon1" id="docMail" value="{{mail}}">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Monto Aprobado&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Monto Aprobado" aria-label="Monto Aprobado"
+              aria-describedby="basic-addon1" id="docAmount" value="2000000">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Texto
+              Monto&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Texto del monto aprobado"
+              aria-label="Texto del monto aprobado" aria-describedby="basic-addon1" id="docAmountStr"
+              value="Dos millones de pesos chilenos">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Id.
+              Contrato&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Generado automáticamente"
+              aria-label="Generado automáticamente" aria-describedby="basic-addon1" id="docAccount">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Id. Base Datos&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Id. en base de datos" aria-label="Id. en base de datos"
+              aria-describedby="basic-addon1" id="docBdId" value="628e9faee29a7ce28995e0da">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text"
+              id="basic-addon1">Referencia&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Código de Referencia" aria-label="Código de Referencia"
+              aria-describedby="basic-addon1" id="docRef" value="1154">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">N° de Contrato</span>
+            <input type="text" class="form-control" placeholder="Generado automáticamente" aria-label="Número de Cuenta"
+              aria-describedby="basic-addon1" id="docContract">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="getPdf" checked>
+            <label class="form-check-label" for="getPdf">
+              Trae documento pdf en base64 ???
+            </label>
+          </div>
+        </div>
+        <div class="col">
+          <div class="row">
+            <div class="col">
+              <div class="mb-3">
+                <label for="payloadRequest" class="form-label">Request</label>
+                <textarea class="form-control" id="payloadRequest" rows="15"></textarea>
+              </div>
+            </div>
+            <div class="col">
+              <div class="mb-3">
+                <label for="payloadResponse" class="form-label">Response</label>
+                <textarea class="form-control" id="payloadResponse" rows="15"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="mb-3">
+            <div>
+              <button type="button" onClick="createContract()" class="btn btn-primary">Crear Contrato</button>
+              <button type="button" onClick="generateContract()" class="btn btn-primary">Generar Firmado</button>
+              <button type="button" onClick="showContract()" class="btn btn-primary">Ver Contrato</button>
+              <button type="button" onClick="showHistory()" class="btn btn-primary">Ver Historial</button>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="spinner-border text-primary" role="status" id="docSpinner" hidden>
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <p></p>
+  <!-- Testeo de Creccu API -->
+  <div class="container"
+    style="padding:10px 0px 0px 0px; background-color: rgb(255, 255, 255); border-style: none; border-radius: 10px;">
+    <p class="text-start">Creccu API</p>
+    <form class="row" name="ccuForm">
+      <div> <strong>HandSell</strong> </div>
+      <!-- Metodos relacionadso con la handsell -->
+      <div class="row">
+        <div class="col">
+          <div class="input-group mb-3">
+            <span class="input-group-text"
+              id="basic-addon1">Ruts&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Lista de Ruts" aria-label="Lista de Ruts"
+              aria-describedby="basic-addon1" id="ccaRuts" value="10283513-1, 8338985-0">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Vendedor</span>
+            <input type="text" class="form-control" placeholder="Vendedor" aria-label="Vendedor"
+              aria-describedby="basic-addon1" id="ccaSalesman" value="96667">
+            &nbsp;&nbsp;
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="ccaServicesClients">
+              <option value="---" selected>Servicios</option>
+              <option value="clientsBalance">Balance Clientes</option>
+              <option value="preapprovedClientsDetail">Clientes Preaprobados</option>
+            </select>
+            &nbsp;&nbsp;
+            <button type="button" onClick="execServiceClients()" class="btn btn-primary">Ejecutar</button>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Ciudades</span>
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="ccaCities">
+            </select>&nbsp;&nbsp;* Se cargan dinámicamente
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Comunas</span>
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="ccaCommunes">
+            </select> &nbsp;&nbsp;* Se cargan dinámicamente
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">ID Credito</span>
+            <input type="text" class="form-control" placeholder="Identificador del credito"
+              aria-label="Identificador del credito" aria-describedby="basic-addon1" id="ccaCreditId">
+            &nbsp;&nbsp;
+            <button type="button" onClick="execServiceCreditApplication()" disabled class="btn btn-primary"
+              id="btnCredit" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-custom-class="custom-tooltip"
+              title="Se envia la información para generar contrato.">Ejecutar</button>
+          </div>
+          <div class="input-group mb-3">
+            <button type="button" onClick="execServiceTriggerManualContract()" disabled class="btn btn-primary"
+              id="btnGenerate">Generar Contrato</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="row">
+            <div class="col">
+              <div class="mb-3">
+                <label for="creccuapiRequest" class="form-label">Request</label>
+                <textarea class="form-control" id="creccuapiRequest" rows="15"></textarea>
+              </div>
+            </div>
+            <div class="col">
+              <div class="mb-3">
+                <label for="creccuapiResponse" class="form-label">Response</label>
+                <textarea class="form-control" id="creccuapiResponse" rows="15"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div> <strong>Compra / venta </strong> </div>
+        <!-- Metodos relacionadso con la compra -->
+        <div class="col">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Cliente &nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Rut con guión, sin puntos" aria-label="Rut de Usuario"
+              aria-describedby="basic-addon1" id="ccaRut" value="{{rut}}">
+            &nbsp;
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="ccaService">
+              <option value="---" selected>Servicios</option>
+              <option value="clientExists">Existe</option>
+              <option value="balance">Balance Rest</option>
+              <option value="/BalanceService">Balance Soap</option>
+              <option value="enrolledBySalesman">Enrolados por vendedor</option>
+            </select>
+            &nbsp;
+            <button type="button" onClick="execServiceClient()" class="btn btn-primary">Ejecutar</button>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Vendedor</span>
+            <input type="text" class="form-control" placeholder="Vendedor" aria-label="Vendedor"
+              aria-describedby="basic-addon1" id="buySalesman" value="96667">
+            &nbsp;
+            <span class="input-group-text" id="basic-addon1">Código Autorización</span>
+            <input type="text" class="form-control" placeholder="Código" aria-label="Código"
+              aria-describedby="basic-addon1" id="buyAuthCode">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Monto&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <input type="text" class="form-control" placeholder="Monto Compra" aria-label="Monto Compra"
+              aria-describedby="basic-addon1" id="buyAmount" value="500">&nbsp;
+            <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="buyServices"
+              onchange="buySelect()">
+              <option value="---" selected>Servicios</option>
+              <option value="approve">Aprobar Compra</option>
+              <option value="sync/approve">Aprobar Compra Sync</option>
+              <option value="/ApprovalService">Aprobar Compra Soap</option>
+              <option value="modify">Modificar Compra</option>
+              <option value="sync/modify">Modificar Compra Sync</option>
+              <option value="sync/delete">Eliminar Compra Sync</option>
+              <option value="modificationBalance">Modificación Balance</option>
+              <option value="submitCharge">Envia Cambio</option>
+              <option value="submitPayment">Aprobar Pago</option>
+              <option value="submitMultiplePay">Aprobar Multiples Pagos</option>
+              <option value="submitSuspension">Suspension</option>
+            </select>&nbsp;
+            <button type="button" onClick="buyServicesMethod()" class="btn btn-primary">Ejecutar</button>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Comentario Trx</span>
+            <input type="text" class="form-control" placeholder="Comentario" aria-label="Comentario"
+              aria-describedby="basic-addon1" id="buyComment" value="SUBMIT">
+          </div>
+        </div>
+        <div class="col">
+          <div class="row">
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1">Request number</span>
+              <input type="text" class="form-control" disabled placeholder="Identificador" aria-label="Vendedor"
+                aria-describedby="basic-addon1" id="requestNumber">&nbsp;
+              <span class="input-group-text" id="basic-addon1">Balance para cliente</span>
+              <input type="text" class="form-control" disabled placeholder="-1" aria-label="Balance"
+                aria-describedby="basic-addon1" id="buyBalance">
+            </div>
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1">N° Orden</span>
+              <input type="text" class="form-control" placeholder="Orden" aria-label="Número de orden"
+                aria-describedby="basic-addon1" id="buyOrder" value="3">&nbsp;
+              <span class="input-group-text" id="basic-addon1">N° Secuencia</span>
+              <input type="text" class="form-control" placeholder="Secuence" aria-label="Secuence"
+                aria-describedby="basic-addon1" id="buySecuence" value="5">
+              &nbsp;
+              <span class="input-group-text" id="basic-addon1">N° Documento</span>
+              <input type="text" class="form-control" placeholder="Documento" aria-label="Número Documento"
+                aria-describedby="basic-addon1" id="buyDocument" value="4">
+            </div>
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1">N° Factura</span>
+              <input type="text" class="form-control" placeholder="Número de Factura" aria-label="Número de factura"
+                aria-describedby="basic-addon1" id="buyInvoice" value="6">&nbsp;
+
+              <select class="form-select form-select-sm" aria-label=".form-select-sm example" id="submitServices">
+                <option value="---" selected>Servicios</option>
+                <option value="submitSuspension">Suspención</option>
+                <option value="submitCreditNote">Nota de Credito</option>
+                <option value="submitInvoice">Factura</option>
+              </select>&nbsp;
+              <button type="button" onClick="servicesSubmit()" class="btn btn-primary">Ejecutar</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="container" style="background-color: rgb(255, 255, 255);">
+              <div class="spinner-border text-primary" role="status" id="ccaSpinner" hidden>
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div hidden class="container"
+    style="padding:10px 0px 0px 0px; background-color: rgb(246, 244, 244); border-style: none; border-radius: 10px;">
+    <div class="row">
+      <div> <strong>Imagen</strong> </div>
+      <!-- Metodos relacionadso con la compra -->
+      <div class="col">
+        <div class="mb-3">
+          <textarea class="form-control" id="photoData" rows="15"></textarea>
+        </div>
+        <button type="button" onClick="getPhotos()" class="btn btn-primary">Ver data</button>
+      </div>
+    </div>
+  </div>
+  <p></p>
+  <p></p>
+  <p></p>
+</body>
+
+</html>

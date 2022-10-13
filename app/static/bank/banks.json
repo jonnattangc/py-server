@@ -1,0 +1,50 @@
+{
+    "status": "success",
+    "data": [
+        {
+            "id": 4,
+            "account": {
+                "bank": {
+                    "name": "BANCO ITAU CHILE"
+                },
+                "number": "0220824835"
+            }
+        },
+        {
+            "id": 1,
+            "account": {
+                "bank": {
+                    "name": "BANCO ITAU CHILE"
+                },
+                "number": "0202433077"
+            }
+        },
+        {
+            "id": 5,
+            "account": {
+                "bank": {
+                    "name": "BANCO ITAU CHILE"
+                },
+                "number": "0220872727"
+            }
+        },
+        {
+            "id": 3,
+            "account": {
+                "bank": {
+                    "name": "BANCO ITAU CHILE"
+                },
+                "number": "0201785945"
+            }
+        },
+        {
+            "id": 2,
+            "account": {
+                "bank": {
+                    "name": "BANCO ITAU CHILE"
+                },
+                "number": "0202418519"
+            }
+        }
+    ]
+}
