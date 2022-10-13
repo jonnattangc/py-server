@@ -15,6 +15,8 @@ try:
     from check import Checker
     from chilexpress import Chilexpress
     from flask_httpauth import HTTPBasicAuth
+    from edenred import Edenred
+
 except ImportError:
 
     logging.error(ImportError)
@@ -125,23 +127,34 @@ def webRed():
 # ==============================================================================
 # Notificacion en CV
 # ==============================================================================
-@app.route('/cv/<path:subpath>', methods=['GET', 'POST'])
+@app.route('/cv/<path:subpath>', methods=['GET'])
 def processCV( subpath ):
     data_cv = ''
     try :
-        file_path = os.path.join(ROOT_DIR, 'static')
-        file_path = os.path.join(file_path, 'cv.base64')
+        logging.info("Obtengo CV de: " + str(subpath) )
+        file_path = os.path.join(ROOT_DIR, 'static/cvs')
+        file_path = os.path.join(file_path, str(subpath) + '_cv.data')
         with open(file_path) as file:
             data_cv = file.read()
             file.close()
     except Exception as e:
         print("ERROR POST:", e)
-    time.sleep(1)
     data = {
         "name": "Jonnattan Griffiths",
         "data": str(data_cv)
     }
     return jsonify(data)
+
+# ==============================================================================
+# Test con Edenred
+# ==============================================================================
+@app.route('/edenred/<path:subpath>', methods=['GET', 'POST'])
+def edenredProcess( subpath ):
+    logging.info("Reciv /edenred ")
+    edenred = Edenred(ROOT_DIR)
+    dataTx, error = edenred.requestProcess(request, subpath)
+    del edenred
+    return dataTx, error
 
 # ==============================================================================
 # Para simular las respuesta de criptomkt.
