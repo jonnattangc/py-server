@@ -412,7 +412,7 @@ if __name__ == "__main__":
         listenPort = int(sys.argv[1])
         # app.run(ssl_context='adhoc', host='0.0.0.0', port=listenPort, debug=True)
         # app.run( ssl_context=('cert_jonnattan.pem', 'key_jonnattan.pem'), host='0.0.0.0', port=listenPort, debug=True)
-        app.run( host='0.0.0.0', port=listenPort )
+        app.run( host='0.0.0.0', port=listenPort, debug=True)
     except Exception as e:
         print("ERROR MAIN:", e)
 

@@ -10,6 +10,7 @@ RUN pip install --upgrade pip && \
     pip3 install PyMySQL && \
     pip3 install datetime && \
     pip3 install flask_httpauth && \
+    pip3 install python-jose && \
     mkdir -p /usr/src/app
 
 EXPOSE 8085
