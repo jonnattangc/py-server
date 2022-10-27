@@ -11,6 +11,7 @@ RUN pip install --upgrade pip && \
     pip3 install datetime && \
     pip3 install flask_httpauth && \
     pip3 install python-jose && \
+    pip3 install flask-cors && \
     mkdir -p /usr/src/app
 
 EXPOSE 8085
