@@ -14,7 +14,7 @@ except ImportError:
     sys.exit(-2)
 
 
-class Chilexpress() :
+class Sserpxelihc() :
     db = None
     host = '192.168.0.15'
     user = 'jonnattan'

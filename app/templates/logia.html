@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL 188 - Buenaventura Cadiz Patiño</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    
+</head>
+
+<body style="background-color:#ffffff;">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+    crossorigin="anonymous"></script>
+  <!-- Menu principal -->
+  <div class="container" style="padding: 5px 0px 10px 0px;">
+    <nav class="navbar navbar-expand-lg bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#opciones">Principal</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="https://www.granlogia.cl/index.php/grandes-maestros?layout=edit&id=52">Buenaventura Cadiz</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#opciones" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                Selecciona Evento
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="https://logia.buenaventuracadiz.com/aniversario/ta">Tenida Aniversario</a></li>
+                <li><a class="dropdown-item" href="https://logia.buenaventuracadiz.com/aniversario/rb">Reunión Blanca</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <!-- Testeo de document manager -->
+  <div class="container" style="padding: 5px 0px 10px 0px; width: 645px;"> 
+    {% if select =='ta' %}
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfZY7tHhnul4FR83oQusuW4i9ZXxQ3vyudRylhvEjwyqYCAkg/viewform?embedded=true" width="640" height="1400" frameborder="0" marginheight="0" marginwidth="0">Cargando…</iframe>
+    {% elif select =='rb' %}
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScYM0GWjiGz00gCjV0fRndXqfGowcKkBPTTQR1tQpj5JGnHHA/viewform?embedded=true" width="640" height="1650" frameborder="0" marginheight="0" marginwidth="0">Cargando…</iframe>
+    {% else %}
+     <div class="alert alert-success" role="alert" width="300">
+        Primero debes elegir qué deseas confirmar arriba, donde dice: "Selecciona Evento" 
+     </div>
+    {% endif %}
+    </div>   
+  </div>
+</body>
+
+</html>

@@ -9,13 +9,16 @@ try:
     import json
     import pymysql.cursors
     from datetime import datetime, timedelta
+    from flask_cors import CORS
+    from flask_httpauth import HTTPBasicAuth
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
+    # Clases personales
     from utils import Banks, Deposits
     from security import Security
     from check import Checker
-    from chilexpress import Chilexpress
-    from flask_httpauth import HTTPBasicAuth
-    from edenred import Edenred
+    from sserpxelihc import Sserpxelihc
+    from dernede import Dernede
+    from memorize import Memorize
 
 except ImportError:
 
@@ -42,13 +45,15 @@ root.addHandler(fh)
 
 logger = logging.getLogger('HTTP')
 # ===============================================================================
-# variables globales
+# COnfiguraciones generales del servidor Web
 # ===============================================================================
 app = Flask(__name__)
 auth = HTTPBasicAuth()
-
+cors = CORS(app, resources={r"/page/*": {"origins": "*"}})
+# ===============================================================================
+# variables globales
+# ===============================================================================
 ROOT_DIR = os.path.dirname(__file__)
-
 # Variables globales para TEST de document manages en CCU
 strName = ''
 strContent = ''
@@ -115,45 +120,15 @@ def checkProccess():
     del checker
     return jsonify(json)
 
-#===============================================================================
-# para ver las fotos de MPOS
-#===============================================================================
-@app.route('/web', methods=['GET', 'POST'])
-def webRed():
-    logging.info("Reciv Solicitud!! ")
-    siteUrl = "https://www.jonnattan.com"
-    return render_template( 'create.html', destino = siteUrl )
-
 # ==============================================================================
-# Notificacion en CV
+# Test con Edr
 # ==============================================================================
-@app.route('/cv/<path:subpath>', methods=['GET'])
-def processCV( subpath ):
-    data_cv = ''
-    try :
-        logging.info("Obtengo CV de: " + str(subpath) )
-        file_path = os.path.join(ROOT_DIR, 'static/cvs')
-        file_path = os.path.join(file_path, str(subpath) + '_cv.data')
-        with open(file_path) as file:
-            data_cv = file.read()
-            file.close()
-    except Exception as e:
-        print("ERROR POST:", e)
-    data = {
-        "name": "Jonnattan Griffiths",
-        "data": str(data_cv)
-    }
-    return jsonify(data)
-
-# ==============================================================================
-# Test con Edenred
-# ==============================================================================
-@app.route('/edenred/<path:subpath>', methods=['GET', 'POST'])
-def edenredProcess( subpath ):
-    logging.info("Reciv /edenred ")
-    edenred = Edenred(ROOT_DIR)
-    dataTx, error = edenred.requestProcess(request, subpath)
-    del edenred
+@app.route('/dernede/<path:subpath>', methods=['GET', 'POST'])
+def dernedeProcess( subpath ):
+    logging.info("Reciv /dernede ")
+    edr = Dernede(ROOT_DIR)
+    dataTx, error = edr.requestProcess(request, subpath)
+    del edr
     return dataTx, error
 
 # ==============================================================================
@@ -388,6 +363,101 @@ def cxpPost( subpath ):
     del cxp
     return response, code
 
+# ==============================================================================
+# Para el juego del memorize
+# ==============================================================================
+@app.route('/page/memorize/states', methods=['GET'])
+def getStateCard():
+    logging.info('Solicito estados de tarjetas')
+    memo = Memorize()
+    names, states = memo.getState()
+    del memo
+    data = []
+    i = 0
+    for name in names :
+        data.append({
+            'name': name,
+            'state': states[i]
+        })
+        i = i + 1
+    
+    return jsonify( {'states':data} )
+# ==============================================================================
+# Para el juego del memorize
+# ==============================================================================
+@app.route('/page/memorize/state/save', methods=['POST', 'PUT'] )
+def saveStateCard():
+    logging.info('Guardo estado de tarjeta')
+    memo = Memorize()
+    msg, code = memo.requestProcess(request)
+    del memo
+    data = {
+        'message': msg,
+    }
+    return jsonify(data), code
+
+# ==============================================================================
+# Para el juego del memorize
+# ==============================================================================
+@app.route('/page/memorize/reset', methods=['GET'])
+def reset():
+    logging.info('Reset tarjetas')
+    memo = Memorize()
+    msg, code = memo.resetProcess()
+    del memo
+    data = {
+        'message': msg,
+    }
+    return jsonify(data), code
+
+#===============================================================================
+# para ver las fotos de MPOS
+#===============================================================================
+@app.route('/page', methods=['GET', 'POST'])
+def webRed():
+    logging.info("Reciv Solicitud!! ")
+    siteUrl = "https://www.jonnattan.com"
+    return render_template( 'create.html', destino = siteUrl )
+
+# ==============================================================================
+# Notificacion en CV
+# ==============================================================================
+@app.route('/page/cv/<path:subpath>', methods=['GET'])
+def processCV( subpath ):
+    data_cv = ''
+    try :
+        logging.info("Obtengo CV de: " + str(subpath) )
+        file_path = os.path.join(ROOT_DIR, 'static/cvs')
+        file_path = os.path.join(file_path, str(subpath) + '_cv.data')
+        with open(file_path) as file:
+            data_cv = file.read()
+            file.close()
+    except Exception as e:
+        print("ERROR POST:", e)
+    data = {
+        "name": "Jonnattan Griffiths",
+        "data": str(data_cv)
+    }
+    return jsonify(data)
+
+# ===============================================================================
+# LOGIA
+# ===============================================================================
+@app.route('/aniversario/<path:subpath>', methods=['POST','GET','PUT'])
+def rl_aniversario(subpath):
+    path = str(subpath)
+    logging.info('Solicita Path: /' + path)
+    if path == 'logia.js' :
+        file_path = os.path.join(ROOT_DIR, 'static')
+        file_path = os.path.join(file_path, 'js')
+        return send_from_directory(file_path, 'logia.js')
+    else :
+        return render_template( 'logia.html', select=path )
+# ===============================================================================
+@app.route('/aniversario', methods=['POST','GET','PUT'])
+def rl_aniversario_home():
+        return render_template( 'logia.html' )
+
 # ===============================================================================
 # Favicon
 # ===============================================================================
@@ -397,6 +467,7 @@ def favicon():
     file_path = os.path.join(file_path, 'image')
     return send_from_directory(file_path,
             'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 # ===============================================================================
 # Metodo Principal que levanta el servidor
 # ===============================================================================

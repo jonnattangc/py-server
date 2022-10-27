@@ -11,14 +11,14 @@ except ImportError:
     sys.exit(-2)
 
 
-class Edenred() :
+class Dernede() :
     public_start  = '-----BEGIN PUBLIC KEY-----'
     public_end    = '-----END PUBLIC KEY-----'
     private_start = '-----BEGIN PRIVATE KEY-----'
     private_end   = '-----END PRIVATE KEY-----'
     public_key = None
     private_key = None
-    aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t'
+    aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t' # 256 bit
 
     def __init__(self, root='./') :
         # se leen ambos certificados
