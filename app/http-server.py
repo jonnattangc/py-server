@@ -13,12 +13,15 @@ try:
     from flask_httpauth import HTTPBasicAuth
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
     # Clases personales
-    from utils import Banks, Deposits
+    from utils import Banks, Deposits, Cipher
+    from coordinator import Coordinator
     from security import Security
     from check import Checker
     from sserpxelihc import Sserpxelihc
     from dernede import Dernede
     from memorize import Memorize
+    from granl import GranLogia
+    from utilaws import AwsUtil
 
 except ImportError:
 
@@ -137,114 +140,93 @@ def dernedeProcess( subpath ):
 @app.route('/cmkt/<path:subpath>', methods=['GET', 'POST'])
 def cryptoMrk(subpath) :
     data = ''
-    m1 = time.monotonic()
-    now = datetime.now()
+    m1 = time.monotonic_ns()
     paths = subpath.split('/')
     if( len(paths ) > 2 ) :
-        dataTx = {}
-        if len(paths) >= 3 :
-            if paths[2].find('bank_dates') >= 0 :
-                dataTx = {
-                    "status": "success",
-                    "deposits": {
-                        "from_date" : "01/09/2022",
-                        "to_date"   : now.strftime("%d/%m/%Y")
-                    },
-                }
-            if paths[2].find('bank_deposits_update') >= 0 or paths[2].find('bank_withdrawals_update') >= 0  or paths[2].find('bank_balance_update') >= 0 :
-                if paths[2].find('bank_deposits_update') >= 0 :
-                    request_data = request.get_json()
-                    accountNumber = ''
-                    accountName = ''
-                    # Obtengo el banco
-                    banks = {}
-                    file_path = os.path.join(ROOT_DIR, 'static/bank/banks.json')
-                    with open(file_path) as file:
-                        banks = json.load(file)
-                        file.close()
-                    for bank in banks['data'] :
-                        if int(str(bank['id'])) == int(str(request_data['platform_bank_id'])) :
-                            accountName = bank['account']['bank']
-                            accountName = str(accountName['name'])
-                            accountNumber = str(bank['account']['number'])
-                            break
-                    print('####### accountNumber: ' + accountNumber + ' accountName: ' + accountName )
-                    for deposit in request_data['deposits'] :
-                        amount = int(deposit['amount']) + 0
-                        # Guarda en base de datos
-                        db = pymysql.connect(host='192.168.0.15', user='python-dev', password='PythonDev', database='deposits',cursorclass=pymysql.cursors.DictCursor)
-                        cursor = db.cursor()
-                        try:
-                            sql = """select count(*) as count from deposit where identity = %s"""
-                            cursor.execute(sql, (deposit['identity']))
-                            results = cursor.fetchall()
-                            count = 0
-                            for row in results:
-                                count = int(str(row['count']))
-                            if count == 0 :
-                                sql = """INSERT INTO deposit (amount, name, transbot_id, origin_bank, destination_bank, origin_account, destination_account, date_information, create_at, update_at, `identity`)
-                                                            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                                now = datetime.now()
-                                cursor.execute(sql, (deposit['amount'], deposit['name'], '1', deposit['origin_bank'],
-                                    accountName, deposit['destination_account'], accountNumber, deposit['date'],
-                                        now.strftime("%Y/%m/%d %H:%M:%S"), now.strftime("%Y/%m/%d %H:%M:%S"), deposit['identity']))
-                                db.commit()
-                            else :
-                                print("Existen: " + str(count) + " tuplas con el id: " + deposit['identity'] )
-                        except Exception as e:
-                            print("ERROR BD:", e)
-                            db.rollback()
-                        db.close()
-                        # Se notifica
-                        request_tx = {
-                            'data': {
-                                'transbotID'    : 1,
-                                'amount'        : amount,
-                                'name'          : deposit['name'],
-                                'identity'      : deposit['identity'],
-                                'bank'          : deposit['origin_bank'],
-                                'account'       : deposit['destination_account'],
-                                'date'          : deposit['date'],
-                                'status'        : 'PENDING',
-                                'bank_account'  : accountNumber, # cuenta de este banco
-                            },
-                            'bank': str(request_data['platform_bank_id'])
-                        }
-                        logging.info("Request Tx : " + str(request_tx) )
-                        response = {}
-                        try :
-                            headersTx = {'Content-Type': 'application/json','Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhQGEuY2wiLCJpYXQiOjE2NjMxNjI2OTQsImV4cCI6MTcwMzMzODY5NH0.mIFAIqI7PlV2FLgTNwUfFpdSvxmf1CEerTprH4w8dls' }
-                            response = requests.post('http://192.168.0.10:3000/deposits', json = request_tx, headers = headersTx, timeout = 20)
-                        except Exception as e:
-                            print("ERROR POST:", e)
-                        if response.status_code != None and response.status_code == 200 :
-                            data_response = response.json()
-                            logging.info("Response : " + str( data_response ) )
-                        time.sleep(1)
-                else :
-                    logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
-                    logging.info("Reciv Header : " + str(request.headers) )
-                    logging.info("Reciv Data: " + str(request.data) )
-                # responde
-                dataTx = {
-                    "status": "success"
-                }
-            if paths[2].find('ping') >= 0 :
-                dataTx = {}
+        manager = Coordinator()
+        dataTx = manager.proccessSolicitude( request, paths )
+        del manager
         data = jsonify(dataTx)
     else :
-        banks = Banks( root=ROOT_DIR, filename=subpath )
+        logging.info("Reciv H : " + str(request.headers) )
+        banks = Banks()
         data = banks.json_banks
-    logging.info("Response in " + str(time.monotonic() - m1) + " ms")
+        del banks
+    logging.info("Response time " + str(time.monotonic_ns() - m1) + " ns")
     return data
 
 # ==============================================================================
-# Para simular las respuesta de criptomkt.
+# Para simular las respuesta del casino deams
 # ==============================================================================
 @app.route('/dreams/<path:subpath>', methods=['GET', 'POST'])
 def sunDreams( subpath ):
-    logging.info("==============================================================================")
-    logging.info("Reciv " + str(request.method) + " Action: " + str(subpath) )
+    logging.info("################ DREAMS Reciv Action: " + str(subpath) )
+    logging.info("Reciv H : " + str(request.headers) )
+    logging.info("Reciv D: " + str(request.data) )
+    m1 = time.monotonic()
+    response = None
+    url = 'https://hooks.slack.com/services/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'
+    headers = {'Content-Type': 'application/json'}
+    request_data = request.get_json()
+    monto = str(request_data['amount'])
+    fecha = str(request_data['date'])
+    name = str(request_data['name'])
+    rut = str(request_data['identity'])
+    bank = str(request_data['bank'])
+    account = str(request_data['account'])
+    code = str(request_data['code'])
+
+    request_tx = {
+            'username': 'TT-Pay: Notificación de depósito',
+            'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
+            'attachments': [
+                {
+                    'fallback'      : 'Nuevo deposito',
+                    'pretext'       : 'Datos de Origen',
+                    'text'          : 'Nombre: ' + name,
+                    'color'         : 'good',
+                    'fields'        : [
+                        {
+                            'title': 'Rut',
+                            'value': rut,
+                            'short': True
+                        },{
+                            'title': 'Banco',
+                            'value': bank,
+                            'short': True
+                        },{
+                            'title': 'Cuenta',
+                            'value': account,
+                            'short': True
+                        },{
+                            'title': 'Código',
+                            'value': code,
+                            'short': True
+                        }
+                    ]
+                }
+            ]
+        }
+
+    try :
+        logging.info("URL : " + url )
+        response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+        diff = time.monotonic() - m1;
+    except Exception as e:
+        print("ERROR POST:", e)
+
+    try :
+        if( response != None and response.status_code == 200 ) :
+            logging.info('Response Slack' + str( response ) )
+        elif( response != None and response.status_code != 200 ) :
+            logging.info("Response NOK" + str( response ) )
+        else : 
+            logging.info("Nose pudo notificar por Slak")
+    except Exception as e:
+        print("ERROR Mensajes:", e)
+
+    logging.info("Time Response in " + str(diff) + " sec." )
+    
     dataTx = {"ok": True}
     return jsonify(dataTx)
 
@@ -343,7 +325,7 @@ def showContract( name ):
 # ==============================================================================
 @app.route('/cxp/change/<path:environment>', methods=['GET'])
 def changeEnv( environment ):
-    cxp = Chilexpress()
+    cxp = Sserpxelihc()
     old, success = cxp.saveEnv(str(environment))
     del cxp
     data = {
@@ -358,7 +340,7 @@ def changeEnv( environment ):
 #===============================================================================
 @app.route('/cxp/<path:subpath>', methods=['POST','GET','PUT'])
 def cxpPost( subpath ):
-    cxp = Chilexpress()
+    cxp = Sserpxelihc()
     response, code = cxp.requestProcess(request, subpath)
     del cxp
     return response, code
@@ -410,6 +392,184 @@ def reset():
     }
     return jsonify(data), code
 
+# ==============================================================================
+# Realiza login en la pagina de la Gran Logia usando para ello scraper
+# ==============================================================================
+@app.route('/logia/usergl/login', methods=['POST'])
+def loginGL():
+    #logging.info("Reciv Header : " + str(request.headers) )
+    #logging.info("Reciv Data   : " + str(request.data) )
+    message = "No autorizado"
+    code  = 401
+    user = ''
+    apyKey = request.headers.get('API-Key')
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+        request_data = request.get_json()
+        data_cipher = str(request_data['data'])
+        logging.info('API Key Ok, Data: ' + data_cipher )
+        cipher = Cipher()
+        data_bytes = cipher.aes_decrypt(data_cipher)
+        data_clear = str(data_bytes.decode('UTF-8'))
+        del cipher
+        if data_clear != None :
+            datos = data_clear.split('|||')
+            if len(datos) == 2 and datos[0] != None and datos[1] != None :
+                user = str(datos[0]).strip()
+                passwd = str(datos[1]).strip()
+                if user != '' and passwd != '' :
+                    gl = GranLogia()
+                    message, code  = gl.loginSystem( user, passwd ) 
+                    del gl
+    data = {
+        'message' : str(message),
+        'user' : str(user)
+    }
+    return jsonify(data), code
+
+# ==============================================================================
+# Evalua el acceso a un recurso expecifico por parte del QH
+# ==============================================================================
+@app.route('/logia/usergl/access', methods=['POST'])
+def access_evaluateGL():
+    #logging.info("Reciv Header : " + str(request.headers) )
+    #logging.info("Reciv Data   : " + str(request.data) )
+    message = "No autorizado"
+    code  = 401
+    apyKey = request.headers.get('API-Key')
+    code = 0
+    http_code = 401
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+        request_data = request.get_json()
+        data_cipher = str(request_data['data'])
+        logging.info('API Key Ok, Data: ' + data_cipher )
+        cipher = Cipher()
+        data_bytes = cipher.aes_decrypt(data_cipher)
+        data_clear = str(data_bytes.decode('UTF-8'))
+        del cipher
+        if data_clear != None :
+            datos = data_clear.split('&&')
+            if len(datos) == 2 and datos[0] != None and datos[1] != None :
+                user = str(datos[0]).strip()
+                grade = str(datos[1]).strip()
+                if user != '' and grade != '' :
+                    gl = GranLogia()
+                    message, code, http_code  = gl.validateAccess( user, grade ) 
+                    del gl
+    data = {
+        'message' : str(message),
+        'code' : str(code)
+    }
+    return jsonify(data), http_code
+
+# ==============================================================================
+# Evalua el acceso a un recurso expecifico por parte del QH
+# ==============================================================================
+@app.route('/logia/usergl/grade', methods=['POST'])
+def getGradeQH():
+    #logging.info("Reciv Header : " + str(request.headers) )
+    #logging.info("Reciv Data   : " + str(request.data) )
+    apyKey = request.headers.get('API-Key')
+    message = "No autorizado"
+    grade = 0
+    http_code = 401
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+        request_data = request.get_json()
+        data_cipher = str(request_data['user'])
+        logging.info('API Key Ok, Data: ' + data_cipher )
+        cipher = Cipher()
+        data_bytes = cipher.aes_decrypt(data_cipher)
+        data_clear = str(data_bytes.decode('UTF-8'))
+        del cipher
+        if data_clear != None :
+            user = data_clear.strip()
+            if user != '' :
+                gl = GranLogia()
+                message, grade, http_code  = gl.getGrade( user ) 
+                del gl
+    data = {
+        'message' : str(message),
+        'grade' : str(grade)
+    }
+    return jsonify(data), http_code
+
+# ==============================================================================
+# Obtiene la URL del documento asociado
+# ==============================================================================
+@app.route('/logia/docs/url', methods=['POST'])
+def access_docs_logia():
+    logging.info("Reciv Header : " + str(request.headers) )
+    http_code = 409
+    message = None
+    apyKey = request.headers.get('API-Key')
+    code = -1
+    cipher = Cipher()
+    data = {}
+    name_doc = ''
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+        request_data = request.get_json()
+        data_cipher = str(request_data['data'])
+        logging.info('API Key Ok, Data: ' + str(data_cipher) )
+        data_bytes = cipher.aes_decrypt(data_cipher)
+        data_clear = str(data_bytes.decode('UTF-8'))
+        logging.info('Data en claro: ' + str(data_clear) )
+        if data_clear != None :
+            datos = data_clear.split(';')
+            if len(datos) == 3 and datos[0] != None and datos[1] != None and datos[2] != None :
+                name_doc = str(datos[0]).strip()
+                grade_doc = str(datos[1]).strip()
+                id_qh = str(datos[2]).strip()
+                if name_doc != '' and grade_doc != '' and id_qh != '' :
+                    gl = GranLogia()
+                    message, code, http_code  = gl.validateAccess( id_qh, grade_doc ) 
+                    del gl
+
+    if code != -1 and message != None and http_code == 200 :
+        url_doc = 'https://dev.jonnattan.com/logia/docs/pdf/' + str(time.monotonic_ns()) + '/'
+        logging.info('URL Base: ' + str(url_doc) )
+        data_cipher = cipher.aes_encrypt( name_doc )
+        data = {
+            'data' : str(data_cipher.decode('UTF-8')),
+            'url'  : str(url_doc)
+        }
+    del cipher
+    return jsonify(data), http_code
+
+# ==============================================================================
+# Devuelve el PDF del docuemento asociado
+# ==============================================================================
+@app.route('/logia/docs/pdf/<path:subpath>', methods=['GET'])
+def show_pdf(subpath):
+    logging.info("Reciv Header : " + str(request.headers) )
+    file_path = os.path.join(ROOT_DIR, 'static/logia')
+    paths = str(subpath).split('/')
+    if len(paths) == 2 :
+        mark = int(str(paths[0]).strip())
+        diff = time.monotonic_ns() - mark
+        logging.info("DIFFFFFF: " + str(diff))
+        if diff < 1000000000 :
+            cipher = Cipher()
+            data_bytes = cipher.aes_decrypt(str(paths[1]).strip())
+            data_clear = str(data_bytes.decode('UTF-8'))
+            del cipher
+            return send_from_directory(file_path, data_clear)
+    return jsonify({'message':'Acceso no autorizado'}), 401
+
+# ==============================================================================
+# Imagenes para pagina de la logia
+# ==============================================================================
+@app.route('/logia/images/<path:name>', methods=['GET'])
+def images_logia( name ):
+    # logging.info("Reciv Header : " + str(request.headers) )
+    fromHost = request.headers.get('Referer')
+    if fromHost != None :
+        if str(fromHost).find('https://logia.buenaventuracadiz.com') >= 0 :
+            file_path = os.path.join(ROOT_DIR, 'static')
+            file_path = os.path.join(file_path, 'images')
+            return send_from_directory(file_path, str(name) )
+        else :
+            return jsonify({'message':'Acceso no autorizado'}), 401
+    else :
+        return jsonify({'message':'Acceso no autorizado'}), 401
 #===============================================================================
 # para ver las fotos de MPOS
 #===============================================================================
@@ -440,23 +600,114 @@ def processCV( subpath ):
     }
     return jsonify(data)
 
-# ===============================================================================
-# LOGIA
-# ===============================================================================
-@app.route('/aniversario/<path:subpath>', methods=['POST','GET','PUT'])
-def rl_aniversario(subpath):
-    path = str(subpath)
-    logging.info('Solicita Path: /' + path)
-    if path == 'logia.js' :
-        file_path = os.path.join(ROOT_DIR, 'static')
-        file_path = os.path.join(file_path, 'js')
-        return send_from_directory(file_path, 'logia.js')
-    else :
-        return render_template( 'logia.html', select=path )
-# ===============================================================================
-@app.route('/aniversario', methods=['POST','GET','PUT'])
-def rl_aniversario_home():
-        return render_template( 'logia.html' )
+# ==============================================================================
+# Conexi'on a AWS en python 
+# ==============================================================================
+@app.route('/page/aws/contents', methods=['GET'])
+def awsTest():
+    http_code = 409
+    data = {}
+    m1 = time.monotonic_ns()
+    try :
+        logging.info("Reciv Header : " + str(request.headers) )
+        logging.info("Reciv Data   : " + str(request.data) )
+        aws = AwsUtil()
+        photos = aws.getPhotos()
+        docs = aws.getDocs()
+        del aws
+        data = {
+            'photos' : str(photos),
+            'docs' : str(docs)
+        }
+        http_code = 200
+    except Exception as e:
+        print("ERROR TEST AWS:", e)
+
+    diff = time.monotonic_ns() - m1
+    logging.info('Service Time Response in ' + str(diff) + ' nsec' )
+    return jsonify(data), http_code 
+# ==============================================================================
+# Notificacion en CV
+# ==============================================================================
+@app.route('/page/geo/search', methods=['POST'])
+def findGeoPos( ):
+    code = 409
+    data = {}
+    try :
+        logging.info("Reciv Header : " + str(request.headers) )
+        logging.info("Reciv Data   : " + str(request.data) )
+        request_data = request.get_json()
+        address = str(request_data['address'])
+        address = address.replace('pob', 'población')
+        address = address.replace('depto', 'departamento')
+        address = address.replace('block', 'edificio')
+        address = address.replace('.', ' ')
+        address = address.replace('  ', ' ')
+        address = address.replace(' ', '%20')
+        logging.info("data_cipher: " + address )
+        url = 'https://nominatim.openstreetmap.org/search?q=' + address
+        url += '&country=Chile'
+        url += '&format=json'
+        url += '&polygon_geojson=1'
+        url += '&addressdetails=1'
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json' }
+        m1 = time.monotonic_ns()
+        logging.info("URL : " + url )
+        resp = requests.get(url, headers = headers, timeout = 40)
+        diff = time.monotonic_ns() - m1
+        if( resp.status_code == 200 ) :
+            data_response = resp.json()
+            logging.info("Response: " + str( data_response ) )
+            data = {
+                'latitude'  : str( data_response[0]['lat'] ),
+                'longitude' : str( data_response[0]['lon'] ),
+                'name'      : str( data_response[0]['display_name'] ),
+                'message'   : 'Servicio Ejecutado Existosamente'
+            }
+            code = 200
+        else :
+            data_response = resp.json()
+            logging.info("Response: " + str( data_response ) )
+
+        logging.info("Time Response in " + str(diff/1000000000.0) + " sec." )
+
+    except Exception as e:
+        print("ERROR POST:", e)
+    
+    return jsonify(data), code 
+
+# ==============================================================================
+# Notificacion en CV
+# ==============================================================================
+@app.route('/page/segpass/<path:subpath>', methods=['GET'])
+def validaterecaptcha( subpath ):
+    logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data: " + str(request.data) )
+    token = str(request.args.get('token', 'AABBCCDD'))
+    secret = '6Lfp-vUjAAAAAMEZzuPO4UWN9NlOZDJZ5JWH7ZMO'
+    headers = { 'Content-Type': 'application/json' }
+    logging.info("token : " + token )
+    diff = 0
+    m1 = time.monotonic()
+    data_response = {}
+    code = 409
+    if token != 'AABBCCDD' :
+        url = 'https://www.google.com/recaptcha/api/siteverify?secret='+secret+'&response='+token
+        logging.info("URL : " + url )
+        resp = requests.get(url, data = request.data, headers = headers, timeout = 40)
+        diff = time.monotonic() - m1
+        code = resp.status_code
+        if( resp.status_code == 200 ) :
+            data_response = resp.json()
+            logging.info("Response OK" + str( data_response ) )
+        else :
+            data_response = resp.json()
+            logging.info("Response NOK" + str( data_response ) )
+    
+    logging.info("Time Response in " + str(diff) + " sec." )
+
+    return jsonify(data_response), code
 
 # ===============================================================================
 # Favicon

@@ -6,11 +6,13 @@ try:
     import json
     import pymysql.cursors
     from datetime import datetime, timedelta
+    from jose import jwe
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
+ROOT_DIR = os.path.dirname(__file__)
 
 class Deposits() :
     db = None
@@ -19,6 +21,7 @@ class Deposits() :
     password = 'PythonDev'
     database = 'deposits'
     transbot_id = '1'
+    
 
     def __init__(self) :
         try:
@@ -64,7 +67,7 @@ class Banks():
     banks = []
     json_banks = {}
 
-    def __init__(self, root='./', filename='') :
+    def __init__(self, root=ROOT_DIR, filename='bank/banks') :
         try:
             file_path = os.path.join(root, 'static/' + str(filename) + '.json')
             with open(file_path) as file:
@@ -88,19 +91,19 @@ class Banks():
         id = int(bank['id'])
         return Bank( id, account, name )
 
-    def getBank(self, id) :
+    def getBank(self, idBank) :
         name = None
         account = None
-        for bank in self.json_banks :
-            if bank.id == int(id) :
+        for bank in self.banks :
+            if bank.id == int(idBank) :
                 name = bank.name
                 account = bank.account
                 break
         return name, account
 
 class Bank() :
-    name = None
-    account = None
+    name = ''
+    account = ''
     id = -1
 
     def __init__(self, id, account, name) :
@@ -109,6 +112,39 @@ class Bank() :
         self.name = name
 
     def __del__(self):
-        self.name = None
-        self.account = None
+        self.name = ''
+        self.account = ''
         self.id = -1
+
+class Cipher() :
+    aes_key = ''
+    algorithm = ''
+
+    def __init__(self, algorithm='aes') :
+        self.id = id
+        self.aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t' # 256 bit
+        self.algorithm = algorithm
+
+    def __del__(self):
+        self.aes_key = ''
+        self.algorithm = ''
+
+    def aes_encrypt(self, payload ) :
+        data_cipher = None
+        try :
+            logging.info("Cifro " + str(self.algorithm))
+            data_cipher = jwe.encrypt(payload, key=self.aes_key, algorithm='dir', encryption='A256GCM')
+        except Exception as e:
+            print("ERROR Cipher:", e)
+            data_cipher = None
+        return data_cipher
+
+    def aes_decrypt(self, data ) :
+        data_clear = None
+        try :
+            logging.info("Decifro " + str(self.algorithm))
+            data_clear = jwe.decrypt(data, key=self.aes_key )
+        except Exception as e:
+            print("ERROR Decipher:", e)
+            data_clear = None
+        return data_clear

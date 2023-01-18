@@ -1,23 +1,23 @@
-FROM python:3
+FROM python:3.9-slim
 
-LABEL VERSION=1.0
-LABEL DESCRIPCION="Python Server HTTP"
+LABEL VERSION=1.1
+LABEL DESCRIPCION="Python Server HTTP V2"
 
-RUN pip install --upgrade pip && \
-    pip3 install requests && \
-    pip3 install pyopenssl  && \
-    pip3 install flask && \
-    pip3 install PyMySQL && \
-    pip3 install datetime && \
-    pip3 install flask_httpauth && \
-    pip3 install python-jose && \
-    pip3 install flask-cors && \
-    mkdir -p /usr/src/app
+ENV FLASK_APP app
+ENV FLASK_DEBUG development
 
-EXPOSE 8085
-
-COPY ./app/run.sh /usr/src/app/run.sh
+RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-CMD [ "/bin/sh", "./run.sh" ]
+COPY ./requirements.txt ./requirements.txt
+
+RUN pip install --upgrade pip && \
+    pip3 install -r requirements.txt
+
+EXPOSE 8085
+
+CMD [ "python3", "http-server.py", "8085"]
+# python3 http-server.py 8085
+# CMD [ "/bin/sh", "./run.sh" ]
+
