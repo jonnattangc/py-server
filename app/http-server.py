@@ -677,9 +677,9 @@ def findGeoPos( ):
     return jsonify(data), code 
 
 # ==============================================================================
-# Notificacion en CV
+# Servicio para validar el recaptcha
 # ==============================================================================
-@app.route('/page/segpass/<path:subpath>', methods=['GET'])
+@app.route('/page/recaptcha/<path:subpath>', methods=['GET'])
 def validaterecaptcha( subpath ):
     logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
     logging.info("Reciv Header : " + str(request.headers) )
