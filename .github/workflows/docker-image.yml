@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Crea Imagen Docker
 
 on:
   push:
@@ -7,12 +7,10 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: server-jonnattan
 
     steps:
     - uses: actions/checkout@v3
     - name: Construir imagen
-      run: docker build -t prueba:$(date +%s) .
+      run: docker build -t prueba:$(date +%s) . 
