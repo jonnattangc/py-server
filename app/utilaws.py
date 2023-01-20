@@ -60,28 +60,3 @@ class AwsUtil() :
         diff = time.monotonic_ns() - m1
         logging.info("AWS Time S3 Docs Response in " + str(diff) + " nsec." )
         return elements
-
-    def test_2( self ) :
-        message = 'Error de acceso a AWS'
-        http_code = 409
-        access_key_id = 'AKIAVRN7PMCDDBVYGBXO'
-        secret_access_key = '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'
-
-        try :
-            session = boto3.Session(
-                aws_access_key_id=access_key_id,
-                aws_secret_access_key=secret_access_key,
-                #region_name='us-east-2'
-            )
-            s3 = session.resource('s3')
-            i = 0
-            for bucket in s3.buckets.all():
-                logging.info('Bucket: ' + bucket.name)
-                i = i + 1 
-            message = 'Hay ' + str(i) + ' bucket(s) en AWS'
-            http_code = 200
-
-        except Exception as e:
-            print("ERROR TEST AWS:", e)
-
-        return message, http_code 
