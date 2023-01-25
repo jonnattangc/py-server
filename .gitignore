@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 # archivos pdf
 **/*.pdf
-
+.env
 # C extensions
 *.so
 

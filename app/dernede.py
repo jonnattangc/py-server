@@ -18,7 +18,7 @@ class Dernede() :
     private_end   = '-----END PRIVATE KEY-----'
     public_key = None
     private_key = None
-    aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t' # 256 bit
+    aes_key = os.environ.get('AES_KEY','None')
 
     def __init__(self, root='./') :
         # se leen ambos certificados

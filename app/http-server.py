@@ -57,6 +57,9 @@ cors = CORS(app, resources={r"/page/*": {"origins": "*"}})
 # variables globales
 # ===============================================================================
 ROOT_DIR = os.path.dirname(__file__)
+
+SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
+
 # Variables globales para TEST de document manages en CCU
 strName = ''
 strContent = ''
@@ -165,7 +168,7 @@ def sunDreams( subpath ):
     logging.info("Reciv D: " + str(request.data) )
     m1 = time.monotonic()
     response = None
-    url = 'https://hooks.slack.com/services/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'
+    url = os.environ.get('SLACK_NOTIFICATION','None')
     headers = {'Content-Type': 'application/json'}
     request_data = request.get_json()
     monto = str(request_data['amount'])
@@ -210,8 +213,9 @@ def sunDreams( subpath ):
 
     try :
         logging.info("URL : " + url )
-        response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
-        diff = time.monotonic() - m1;
+        if url != 'None' :
+            response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+            diff = time.monotonic() - m1;
     except Exception as e:
         print("ERROR POST:", e)
 
@@ -685,14 +689,14 @@ def validaterecaptcha( subpath ):
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
     token = str(request.args.get('token', 'AABBCCDD'))
-    secret = '6Lfp-vUjAAAAAMEZzuPO4UWN9NlOZDJZ5JWH7ZMO'
+    secret = str(SECRET_KEY)
     headers = { 'Content-Type': 'application/json' }
     logging.info("token : " + token )
     diff = 0
     m1 = time.monotonic()
     data_response = {}
     code = 409
-    if token != 'AABBCCDD' :
+    if token != 'AABBCCDD' and secret != 'NO_SECRET_KEY' :
         url = 'https://www.google.com/recaptcha/api/siteverify?secret='+secret+'&response='+token
         logging.info("URL : " + url )
         resp = requests.get(url, data = request.data, headers = headers, timeout = 40)

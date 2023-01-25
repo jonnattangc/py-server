@@ -16,9 +16,9 @@ ROOT_DIR = os.path.dirname(__file__)
 
 class Deposits() :
     db = None
-    host = '192.168.0.15'
-    user = 'python-dev'
-    password = 'PythonDev'
+    host = os.environ.get('HOST_BD','None')
+    user = os.environ.get('USER_BD','None')
+    password = os.environ.get('PASS_BD','None')
     database = 'deposits'
     transbot_id = '1'
     

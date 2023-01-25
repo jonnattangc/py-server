@@ -6,6 +6,14 @@ LABEL DESCRIPCION="Python Server HTTP V2"
 ENV FLASK_APP app
 ENV FLASK_DEBUG development
 
+# variables importantes
+ENV SECRET_KEY ''
+ENV HOST_BD ''
+ENV USER_BD ''
+ENV PASS_BD ''
+ENV AES_KEY ''
+
+
 RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app

@@ -9,8 +9,8 @@ services:
         - $PWD/app:/usr/src/app
       ports:
         - "8085:8085"
-      environment:
-        - TZ:UTC-4
+      env_file:
+      - .env
       networks:
         - db-net
 networks:

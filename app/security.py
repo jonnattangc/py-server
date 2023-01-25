@@ -2,8 +2,6 @@ try:
     import logging
     import sys
     import os
-    import time
-    import json
     import pymysql.cursors
     from datetime import datetime
     from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,9 +13,9 @@ except ImportError:
 
 class Security() :
     db = None
-    host = '192.168.0.15'
-    user = 'jonnattan'
-    password = 'wsxzaq123'
+    host = os.environ.get('HOST_BD','None')
+    user = os.environ.get('USER_BD','None')
+    password = os.environ.get('PASS_BD','None')
     database = 'security'
 
     def __init__(self) :
@@ -64,7 +62,7 @@ class Security() :
         return userBd
 
     def generateUser(self, user, password) :
-        logging.info("Genero nuevo usuario: " + str(username) )
+        logging.info("Genero nuevo usuario: " + str(user) )
         try :
             if self.db != None :
                 cursor = self.db.cursor()

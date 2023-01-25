@@ -24,9 +24,9 @@ URL_NOTIFY = 'http://192.168.0.15:3000/deposits'
 
 class Coordinator() :
     db = None
-    host = '192.168.0.15'
-    user = 'python-dev'
-    password = 'PythonDev'
+    host = os.environ.get('HOST_BD','None')
+    user = os.environ.get('USER_BD','None')
+    password = os.environ.get('PASS_BD','None')
     database = 'deposits'
     transbot_id = -1
 

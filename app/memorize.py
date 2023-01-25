@@ -16,9 +16,9 @@ except ImportError:
 
 class Memorize() :
     db = None
-    host = '192.168.0.15'
-    user = 'jonnattan'
-    password = 'wsxzaq123'
+    host = os.environ.get('HOST_BD','None')
+    user = os.environ.get('USER_BD','None')
+    password = os.environ.get('PASS_BD','None')
     database = 'proxy'
 
     def __init__(self) :
