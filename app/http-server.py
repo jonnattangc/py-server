@@ -613,8 +613,8 @@ def awsTest():
     data = {}
     m1 = time.monotonic_ns()
     try :
-        logging.info("Reciv Header : " + str(request.headers) )
-        logging.info("Reciv Data   : " + str(request.data) )
+        #logging.info("Reciv Header : " + str(request.headers) )
+        #logging.info("Reciv Data   : " + str(request.data) )
         aws = AwsUtil()
         photos = aws.getPhotos()
         docs = aws.getDocs()

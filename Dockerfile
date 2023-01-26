@@ -12,7 +12,8 @@ ENV HOST_BD ''
 ENV USER_BD ''
 ENV PASS_BD ''
 ENV AES_KEY ''
-
+ENV AWS_ACCESS_KEY ''
+ENV AWS_SECRET_KEY ''
 
 RUN mkdir -p /usr/src/app
 
