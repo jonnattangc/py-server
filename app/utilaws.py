@@ -23,7 +23,7 @@ class AwsUtil() :
             self.session = boto3.Session(
                     aws_access_key_id=self.access_key,
                     aws_secret_access_key=self.secret_key,
-                    region_name=region
+                    # region_name=region
                 )
             logging.info("Session Available Resources: " + str(self.session.get_available_resources()) )
         except Exception as e:

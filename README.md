@@ -7,3 +7,5 @@ Los sercivios que tiene disponible sirven para simular comportamientos de alguna
 Actualmente tiene 28 servicios de distinta naturaleza y le dedico tiempo cada vez que puedo para hacer experimentos en las materias que aprendo. 
 
 ![](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fjonnattan)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jonnattangc_py-server&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jonnattangc_py-server)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jonnattangc_py-server&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jonnattangc_py-server)

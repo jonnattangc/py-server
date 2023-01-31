@@ -720,6 +720,7 @@ def validaterecaptcha( subpath ):
 def favicon():
     file_path = os.path.join(ROOT_DIR, 'static')
     file_path = os.path.join(file_path, 'image')
+    logging.info("Icono: " + str( file_path ) )
     return send_from_directory(file_path,
             'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
