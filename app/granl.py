@@ -26,14 +26,12 @@ class GranLogia() :
     database = 'gral-purpose'
 
     driver = None
-    hub = None
+    hub = str(os.environ.get('HUB_SELENIUM_URL','None')) + '/wd/hub'
     wait = None
 
     def __init__(self) :
         try:
             self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
-
-            self.hub = "http://"+str(self.host)+":4444/wd/hub"
             logging.info("HUB: " + self.hub)
 
         except Exception as e :

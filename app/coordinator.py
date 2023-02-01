@@ -26,7 +26,7 @@ class Coordinator() :
     password = os.environ.get('PASS_BD','None')
     database = 'deposits'
     # URL notificacion a middleware IONIX
-    url_notification = 'http://' + str(host) + ':3000/' + database
+    url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/' + database
 
     transbot_id = -1
 
