@@ -33,7 +33,7 @@ class GranLogia() :
         try:
             self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
 
-            self.hub = "http://192.168.0.15:4444/wd/hub"
+            self.hub = "http://"+str(self.host)+":4444/wd/hub"
             logging.info("HUB: " + self.hub)
 
         except Exception as e :

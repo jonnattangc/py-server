@@ -19,15 +19,15 @@ except ImportError:
 
 ############################# Configuraci'on de Coordinador ################################
 
-# URL notificacion a middleware IONIX
-URL_NOTIFY = 'http://192.168.0.15:3000/deposits'
-
 class Coordinator() :
     db = None
     host = os.environ.get('HOST_BD','None')
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
     database = 'deposits'
+    # URL notificacion a middleware IONIX
+    url_notification = 'http://' + str(host) + ':3000/' + database
+
     transbot_id = -1
 
     def __init__(self) :
@@ -94,7 +94,7 @@ class Coordinator() :
         response = {}
         try :
             headersTx = {'Content-Type': 'application/json','Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhQGEuY2wiLCJpYXQiOjE2Njc5MTQ2MjAsImV4cCI6MTcwODA5MDYyMH0.Y7eperR1KbJDHdyIKqaw9djzG6MPYadBq3pAxnuUUeo' }
-            response = requests.post(URL_NOTIFY, json = request_tx, headers = headersTx, timeout = 20)
+            response = requests.post(self.url_notification, json = request_tx, headers = headersTx, timeout = 20)
         except Exception as e:
             print("ERROR POST:", e)
         if response.status_code != None and response.status_code == 200 :
