@@ -55,8 +55,6 @@ app = Flask(__name__)
 
 csrf = CSRFProtect(app)
 
-app.config['WTF_CSRF_ENABLED'] = False
-
 auth = HTTPBasicAuth()
 cors = CORS(app, resources={r"/page/*": {"origins": "dev.jonnattan.com"}})
 # ===============================================================================
@@ -78,6 +76,7 @@ strRef = ''
 # Redirige
 #===============================================================================
 @app.route('/', methods=['GET', 'POST'])
+@csrf.exempt
 def index():
     logging.info("Reciv solicitude endpoint: /" )
     return redirect('/infojonna'), 302
@@ -86,6 +85,7 @@ def index():
 # Redirige
 #===============================================================================
 @app.route('/<path:subpath>', methods=('GET', 'POST'))
+@csrf.exempt
 def processOtherContext( subpath ):
     logging.info("Reciv solicitude endpoint: " + subpath )
     return redirect('/infojonna'), 302
@@ -94,6 +94,7 @@ def processOtherContext( subpath ):
 # Redirige a mi blog personal
 #===============================================================================
 @app.route('/infojonna', methods=['GET', 'POST'])
+@csrf.exempt
 def infoJonnaProccess():
     logging.info("Reciv solicitude endpoint: /infojonna" )
     return jsonify({
@@ -126,6 +127,7 @@ def unauthorized():
 #===============================================================================
 @app.route('/checkall', methods=['GET', 'POST'])
 @auth.login_required
+@csrf.exempt
 def checkProccess():
     checker = Checker()
     json = checker.getInfo()
@@ -136,6 +138,7 @@ def checkProccess():
 # Test con Edr
 # ==============================================================================
 @app.route('/dernede/<path:subpath>', methods=['GET', 'POST'])
+@csrf.exempt
 def dernedeProcess( subpath ):
     logging.info("Reciv /dernede ")
     edr = Dernede(ROOT_DIR)
@@ -147,6 +150,7 @@ def dernedeProcess( subpath ):
 # Para simular las respuesta de criptomkt.
 # ==============================================================================
 @app.route('/cmkt/<path:subpath>', methods=['GET', 'POST'])
+@csrf.exempt
 def cryptoMrk(subpath) :
     data = ''
     m1 = time.monotonic_ns()
@@ -168,6 +172,7 @@ def cryptoMrk(subpath) :
 # Para simular las respuesta del casino deams
 # ==============================================================================
 @app.route('/dreams/<path:subpath>', methods=['GET', 'POST'])
+@csrf.exempt
 def sunDreams( subpath ):
     logging.info("################ DREAMS Reciv Action: " + str(subpath) )
     logging.info("Reciv H : " + str(request.headers) )
@@ -244,6 +249,7 @@ def sunDreams( subpath ):
 # Tests CCU Relacionados con los contratos y la generaci'on de estos.
 # ==============================================================================
 @app.route('/ccu/documents/sign', methods=['GET', 'POST'])
+@csrf.exempt
 def proccess_Sign():
     logging.info("Dashboard D : " + str(request.data) )
     request_data = request.get_json()
@@ -257,6 +263,7 @@ def proccess_Sign():
     return jsonify(dataTx)
 
 @app.route('/ccu/<path:rut>', methods=['POST','GET','PUT'])
+@csrf.exempt
 def page_html( rut ):
     rutStr = str(rut)
 
@@ -303,6 +310,7 @@ def page_html( rut ):
     return render_template( 'ccu.html', rut=rutStr, name=name, address=adrs, adrcom=adrcom, phone=phone, mobile=mobile, commune=commune, mail=mail, birth=birth )
 
 @app.route('/ccu/ccu.js')
+@csrf.exempt
 def process_CCUJS( ):
     file_path = os.path.join(ROOT_DIR, 'static')
     file_path = os.path.join(file_path, 'js')
@@ -310,6 +318,7 @@ def process_CCUJS( ):
     return send_from_directory(file_path, 'ccu.js')
 
 @app.route('/ccu/document/contract/<path:name>', methods=['POST','GET'])
+@csrf.exempt
 def showContract( name ):
     global strName
     global strContent
@@ -334,6 +343,7 @@ def showContract( name ):
 # Cambia el ambiente al que est'a apuntando.
 # ==============================================================================
 @app.route('/cxp/change/<path:environment>', methods=['GET'])
+@csrf.exempt
 def changeEnv( environment ):
     cxp = Sserpxelihc()
     old, success = cxp.saveEnv(str(environment))
@@ -349,6 +359,7 @@ def changeEnv( environment ):
 # Evalua para donde debe ir la pregunta
 #===============================================================================
 @app.route('/cxp/<path:subpath>', methods=['POST','GET','PUT'])
+@csrf.exempt
 def cxpPost( subpath ):
     cxp = Sserpxelihc()
     response, code = cxp.requestProcess(request, subpath)
@@ -359,6 +370,7 @@ def cxpPost( subpath ):
 # Para el juego del memorize
 # ==============================================================================
 @app.route('/page/memorize/states', methods=['GET'])
+@csrf.exempt
 def getStateCard():
     logging.info('Solicito estados de tarjetas')
     memo = Memorize()
@@ -378,6 +390,7 @@ def getStateCard():
 # Para el juego del memorize
 # ==============================================================================
 @app.route('/page/memorize/state/save', methods=['POST', 'PUT'] )
+@csrf.exempt
 def saveStateCard():
     logging.info('Guardo estado de tarjeta')
     memo = Memorize()
@@ -392,6 +405,7 @@ def saveStateCard():
 # Para el juego del memorize
 # ==============================================================================
 @app.route('/page/memorize/reset', methods=['GET'])
+@csrf.exempt
 def reset():
     logging.info('Reset tarjetas')
     memo = Memorize()
@@ -406,6 +420,7 @@ def reset():
 # Realiza login en la pagina de la Gran Logia usando para ello scraper
 # ==============================================================================
 @app.route('/logia/usergl/login', methods=['POST'])
+@csrf.exempt
 def loginGL():
     #logging.info("Reciv Header : " + str(request.headers) )
     #logging.info("Reciv Data   : " + str(request.data) )
@@ -440,6 +455,7 @@ def loginGL():
 # Evalua el acceso a un recurso expecifico por parte del QH
 # ==============================================================================
 @app.route('/logia/usergl/access', methods=['POST'])
+@csrf.exempt
 def access_evaluateGL():
     #logging.info("Reciv Header : " + str(request.headers) )
     #logging.info("Reciv Data   : " + str(request.data) )
@@ -475,6 +491,7 @@ def access_evaluateGL():
 # Evalua el acceso a un recurso expecifico por parte del QH
 # ==============================================================================
 @app.route('/logia/usergl/grade', methods=['POST'])
+@csrf.exempt
 def getGradeQH():
     #logging.info("Reciv Header : " + str(request.headers) )
     #logging.info("Reciv Data   : " + str(request.data) )
@@ -506,6 +523,7 @@ def getGradeQH():
 # Obtiene la URL del documento asociado
 # ==============================================================================
 @app.route('/logia/docs/url', methods=['POST'])
+@csrf.exempt
 def access_docs_logia():
     logging.info("Reciv Header : " + str(request.headers) )
     http_code = 409
@@ -548,6 +566,7 @@ def access_docs_logia():
 # Devuelve el PDF del docuemento asociado
 # ==============================================================================
 @app.route('/logia/docs/pdf/<path:subpath>', methods=['GET'])
+@csrf.exempt
 def show_pdf(subpath):
     logging.info("Reciv Header : " + str(request.headers) )
     file_path = os.path.join(ROOT_DIR, 'static/logia')
@@ -568,6 +587,7 @@ def show_pdf(subpath):
 # Imagenes para pagina de la logia
 # ==============================================================================
 @app.route('/logia/images/<path:name>', methods=['GET'])
+@csrf.exempt
 def images_logia( name ):
     # logging.info("Reciv Header : " + str(request.headers) )
     fromHost = request.headers.get('Referer')
@@ -584,6 +604,7 @@ def images_logia( name ):
 # para ver las fotos de MPOS
 #===============================================================================
 @app.route('/page', methods=['GET', 'POST'])
+@csrf.exempt
 def webRed():
     logging.info("Reciv Solicitud!! ")
     siteUrl = "https://www.jonnattan.com"
@@ -593,6 +614,7 @@ def webRed():
 # Notificacion en CV
 # ==============================================================================
 @app.route('/page/cv/<path:subpath>', methods=['GET'])
+@csrf.exempt
 def processCV( subpath ):
     data_cv = ''
     try :
@@ -614,6 +636,7 @@ def processCV( subpath ):
 # Conexi'on a AWS en python 
 # ==============================================================================
 @app.route('/page/aws/contents', methods=['GET'])
+@csrf.exempt
 def awsTest():
     http_code = 409
     data = {}
@@ -640,6 +663,7 @@ def awsTest():
 # Notificacion en CV
 # ==============================================================================
 @app.route('/page/geo/search', methods=['POST'])
+@csrf.exempt
 def findGeoPos( ):
     code = 409
     data = {}
@@ -690,6 +714,7 @@ def findGeoPos( ):
 # Servicio para validar el recaptcha
 # ==============================================================================
 @app.route('/page/recaptcha/<path:subpath>', methods=['GET'])
+@csrf.exempt
 def validaterecaptcha( subpath ):
     logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
     logging.info("Reciv Header : " + str(request.headers) )
@@ -723,6 +748,7 @@ def validaterecaptcha( subpath ):
 # Favicon
 # ===============================================================================
 @app.route('/favicon.ico', methods=['POST','GET','PUT'])
+@csrf.exempt
 def favicon():
     file_path = os.path.join(ROOT_DIR, 'static')
     file_path = os.path.join(file_path, 'image')
