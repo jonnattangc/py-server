@@ -51,8 +51,10 @@ logger = logging.getLogger('HTTP')
 # COnfiguraciones generales del servidor Web
 # ===============================================================================
 app = Flask(__name__)
+app.config['WTF_CSRF_ENABLED'] = False
+
 auth = HTTPBasicAuth()
-cors = CORS(app, resources={r"/page/*": {"origins": "*"}})
+cors = CORS(app, resources={r"/page/*": {"origins": "dev.jonnattan.com"}})
 # ===============================================================================
 # variables globales
 # ===============================================================================
