@@ -39,12 +39,12 @@ formatter = logging.Formatter(FORMAT)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
-fh = logging.FileHandler('logger.log')
-fh.setLevel(logging.INFO)
-fh.setFormatter(formatter)
+#fh = logging.FileHandler('logger.log')
+#fh.setLevel(logging.INFO)
+#fh.setFormatter(formatter)
 # se meten ambas configuraciones
 root.addHandler(handler)
-root.addHandler(fh)
+#root.addHandler(fh)
 
 logger = logging.getLogger('HTTP')
 # ===============================================================================

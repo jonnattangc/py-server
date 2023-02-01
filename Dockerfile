@@ -20,18 +20,25 @@ ENV HUB_SELENIUM_URL ''
 ENV FLASK_APP app
 ENV FLASK_DEBUG development
 
-RUN mkdir -p /usr/src/app
+RUN addgroup --gid 10101 jonnattan && \
+    adduser --home /home/jonnattan --uid 10100 --gid 10101 --disabled-password jonnattan
 
-WORKDIR /usr/src/app
+USER jonnattan  
 
-COPY ./requirements.txt ./requirements.txt
+COPY ./requirements.txt /home/jonnattan/requirements.txt
 
-RUN pip install --upgrade pip && \
-    pip3 install -r requirements.txt
+RUN cd /home/jonnattan && \ 
+    mkdir -p /home/jonnattan/.local/bin && \
+    export PATH=$PATH:/home/jonnattan/.local/bin && \
+    pip install --upgrade pip && \
+    ls -la  && \
+    pip install -r requirements.txt 
+
+WORKDIR /home/jonnattan/app
 
 EXPOSE 8085
 
-CMD [ "python3", "http-server.py", "8085"]
+CMD [ "python", "http-server.py", "8085"]
 # python3 http-server.py 8085
 # CMD [ "/bin/sh", "./run.sh" ]
 

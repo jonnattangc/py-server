@@ -6,7 +6,7 @@ services:
       image: python-server:v1.1
       restart: always
       volumes:
-        - $PWD/app:/usr/src/app
+        - $PWD/app:/home/jonnattan/app
       ports:
         - "8085:8085"
       env_file:
