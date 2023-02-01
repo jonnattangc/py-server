@@ -20,9 +20,9 @@ except ImportError:
 
 class GranLogia() :
     db = None
-    host = '192.168.0.15'
-    user = 'logia'
-    password = 'RL188#2022'
+    host = os.environ.get('HOST_BD','None')
+    user = os.environ.get('USER_BD_LOGIA','None')
+    password = os.environ.get('PASS_BD_LOGIA','None')
     database = 'gral-purpose'
 
     driver = None
