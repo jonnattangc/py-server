@@ -10,6 +10,7 @@ try:
     import pymysql.cursors
     from datetime import datetime, timedelta
     from flask_cors import CORS
+    from flask_wtf.csrf import CSRFProtect
     from flask_httpauth import HTTPBasicAuth
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
     # Clases personales
@@ -51,6 +52,9 @@ logger = logging.getLogger('HTTP')
 # COnfiguraciones generales del servidor Web
 # ===============================================================================
 app = Flask(__name__)
+
+csrf = CSRFProtect(app)
+
 app.config['WTF_CSRF_ENABLED'] = False
 
 auth = HTTPBasicAuth()

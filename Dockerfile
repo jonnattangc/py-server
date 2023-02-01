@@ -31,7 +31,6 @@ RUN cd /home/jonnattan && \
     mkdir -p /home/jonnattan/.local/bin && \
     export PATH=$PATH:/home/jonnattan/.local/bin && \
     pip install --upgrade pip && \
-    ls -la  && \
     pip install -r requirements.txt 
 
 WORKDIR /home/jonnattan/app
