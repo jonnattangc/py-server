@@ -76,7 +76,6 @@ strRef = ''
 # Redirige
 #===============================================================================
 @app.route('/', methods=['GET', 'POST'])
-@csrf.exempt
 def index():
     logging.info("Reciv solicitude endpoint: /" )
     return redirect('/infojonna'), 302
@@ -85,7 +84,6 @@ def index():
 # Redirige
 #===============================================================================
 @app.route('/<path:subpath>', methods=('GET', 'POST'))
-@csrf.exempt
 def processOtherContext( subpath ):
     logging.info("Reciv solicitude endpoint: " + subpath )
     return redirect('/infojonna'), 302
@@ -94,7 +92,6 @@ def processOtherContext( subpath ):
 # Redirige a mi blog personal
 #===============================================================================
 @app.route('/infojonna', methods=['GET', 'POST'])
-@csrf.exempt
 def infoJonnaProccess():
     logging.info("Reciv solicitude endpoint: /infojonna" )
     return jsonify({
