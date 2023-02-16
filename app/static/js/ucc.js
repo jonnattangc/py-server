@@ -59,19 +59,19 @@ async function soap(path = '', dataTx = '', componente) {
 //================================================================================
 // realiza la consulta al servicio REST
 //================================================================================
-async function apiRequest(path = '', dataTx = {}, method = 'POST') {
-  path = 'https://lbqa.ionix.cl/services' + path
-  console.info('Path: ', path)
+async function apiRequest(path = '', dataTx = {}, method = 'POST', key = '') {
+  console.info('Path  : ', path)
   console.info('DataTx: ', JSON.stringify(data))
+  // Alerta 
   document.getElementById("msgError").hidden = true
   response = await fetch(path, {
     method: method, // GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
+    mode: 'cors',   // no-cors, *cors, same-origin
     // cache: 'no-cache', // * default, no-cache, reload, force-cache, only-if-cached
     // credentials: 'same-origin', // include, *same-origin, omit
     headers: {
       'Content-Type': 'application/json',
-      'api_key': api_key
+      'api_key': key
     },
     // redirect: 'follow', // manual, *follow, error
     // referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
@@ -84,12 +84,13 @@ async function apiRequest(path = '', dataTx = {}, method = 'POST') {
 }
 
 //================================================================================
+// Requests especificos
 //================================================================================
-async function ccuRequest(path, data, componente) {
+async function uccRequest(path, data, componente) {
   area = document.getElementById(componente)
-  response = await apiRequest(path, data)
+  response = await apiRequest( 'https://lbqa.ionix.cl/services' + path, data, 'POST', api_key )
   dataRx = null
-  if (response.ok && response.status == 200) {
+  if (response.ok && response.status == 200) {        
     data = await response.json()
     console.info('DataRx: ', JSON.stringify(data))
     if (data != null && data.code == 'OK') {
@@ -125,13 +126,14 @@ async function showContract() {
   }
   document.getElementById('payloadRequest').value = JSON.stringify(json)
   document.getElementById('payloadResponse').value = ''
-  response = await ccuRequest(path = '/document-manager-services/rest/documentservice/getDocument', data = json, componente = 'payloadResponse')
+  response = await uccRequest(path = '/document-manager-services/rest/documentservice/getDocument', data = json, componente = 'payloadResponse')
   // se muestra en un tab
   if (response != null && document.getElementById("getPdf").checked) {
     await showContractDocument(response)
   }
   document.getElementById("docSpinner").hidden = true
 }
+
 //================================================================================
 async function showHistory() {
   document.getElementById("docSpinner").hidden = false
@@ -140,7 +142,7 @@ async function showHistory() {
   }
   document.getElementById('payloadRequest').value = JSON.stringify(json)
   document.getElementById('payloadResponse').value = ''
-  await ccuRequest(path = '/document-manager-services/rest/documentservice/getDocumentsHistory', data = json, componente = 'payloadResponse')
+  await uccRequest(path = '/document-manager-services/rest/documentservice/getDocumentsHistory', data = json, componente = 'payloadResponse')
   document.getElementById("docSpinner").hidden = true
 }
 //================================================================================
@@ -189,7 +191,7 @@ async function createContractAndSign(route) {
   }
   document.getElementById('payloadRequest').value = JSON.stringify(json)
   document.getElementById('payloadResponse').value = ''
-  response = await ccuRequest(path = '/document-manager-services/rest/documentservice' + route, data = json, componente = 'payloadResponse')
+  response = await uccRequest(path = '/document-manager-services/rest/documentservice' + route, data = json, componente = 'payloadResponse')
   // se muestra en un tab
   if (response != null && document.getElementById("getPdf").checked) {
     await showContractDocument(response)
@@ -214,7 +216,7 @@ async function showContractDocument(response) {
     referenceId: response.referenceId
   }
   document.getElementById("docBdId").value = String(response.id)
-  path = 'https://dev.jonnattan.com/ccu/document/contract/' + response.filename
+  path = 'https://dev.jonnattan.com/ucc/document/contract/' + response.filename
   console.info('Path: ', path)
   // console.info('DataTx: ', JSON.stringify(data))
   resp = await fetch(path, {
@@ -272,7 +274,7 @@ async function servicesSubmit() {
 
   document.getElementById('creccuapiRequest').value = JSON.stringify(json)
   document.getElementById('creccuapiResponse').value = ''
-  response = await ccuRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
+  response = await uccRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
   if (response != null) {
     if (response.authorizationCode != null) {
       document.getElementById('buyAuthCode').value = response.authorizationCode
@@ -355,7 +357,7 @@ async function buyServicesMethod() {
 
     document.getElementById('creccuapiRequest').value = JSON.stringify(json)
     document.getElementById('creccuapiResponse').value = ''
-    response = await ccuRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
+    response = await uccRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
     if (response != null) {
       if (response.authorizationCode != null) {
         document.getElementById('buyAuthCode').value = response.authorizationCode
@@ -406,7 +408,7 @@ async function execServiceClient() {
     }
     document.getElementById('creccuapiRequest').value = JSON.stringify(json)
     document.getElementById('creccuapiResponse').value = ''
-    await ccuRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
+    await uccRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
   }
   else {
     json = {
@@ -414,7 +416,7 @@ async function execServiceClient() {
     }
     document.getElementById('creccuapiRequest').value = JSON.stringify(json)
     document.getElementById('creccuapiResponse').value = ''
-    await ccuRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
+    await uccRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
   }
   document.getElementById('ccaSpinner').hidden = true
 }
@@ -433,7 +435,7 @@ async function execServiceClients() {
   }
   document.getElementById('creccuapiRequest').value = JSON.stringify(json)
   document.getElementById('creccuapiResponse').value = ''
-  response = await ccuRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
+  response = await uccRequest(path = '/creccu-api/rest/' + service, data = json, componente = 'creccuapiResponse')
   if (response != null) {
     document.getElementById('btnCredit').disabled = (response.communes == null || response.cities == null)
     document.getElementById('btnGenerate').disabled = (response.communes == null || response.cities == null)
@@ -462,7 +464,7 @@ async function execServiceTriggerManualContract() {
   }
   document.getElementById('creccuapiRequest').value = JSON.stringify(json)
   document.getElementById('creccuapiResponse').value = ''
-  response = await ccuRequest(path = '/creccu-api/rest/triggerManualContract', data = json, componente = 'creccuapiResponse')
+  response = await uccRequest(path = '/creccu-api/rest/triggerManualContract', data = json, componente = 'creccuapiResponse')
   document.getElementById('ccaSpinner').hidden = true
 }
 
@@ -495,7 +497,7 @@ async function execServiceCreditApplication() {
   }
   document.getElementById('creccuapiRequest').value = JSON.stringify(json)
   document.getElementById('creccuapiResponse').value = ''
-  response = await ccuRequest(path = '/creccu-api/rest/creditApplication', data = json, componente = 'creccuapiResponse')
+  response = await uccRequest(path = '/creccu-api/rest/creditApplication', data = json, componente = 'creccuapiResponse')
 
   document.getElementById('ccaSpinner').hidden = true
 }

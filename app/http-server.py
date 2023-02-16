@@ -7,11 +7,10 @@ try:
     import time
     import requests
     import json
-    import pymysql.cursors
-    from datetime import datetime, timedelta
     from flask_cors import CORS
     from flask_wtf.csrf import CSRFProtect
     from flask_httpauth import HTTPBasicAuth
+    from flask_login import ( LoginManager, UserMixin, current_user, login_required, login_user )
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
     # Clases personales
     from utils import Banks, Deposits, Cipher
@@ -23,6 +22,7 @@ try:
     from memorize import Memorize
     from granl import GranLogia
     from utilaws import AwsUtil
+    from ucc import Ucc
 
 except ImportError:
 
@@ -51,18 +51,25 @@ logger = logging.getLogger('HTTP')
 # ===============================================================================
 # COnfiguraciones generales del servidor Web
 # ===============================================================================
+
+SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
+SECRET_CSRF = os.environ.get('SECRET_KEY_CSRF','KEY-CSRF-ACA-DEBE-IR')
+
 app = Flask(__name__)
+app.config.update( DEBUG=False, SECRET_KEY = str(SECRET_CSRF), )
+
+#login_manager = LoginManager()
+#login_manager.init_app(app)
+
 csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, resources={r"/page/*": {"origins": "dev.jonnattan.com"}})
+cors = CORS(app, resources={r"/page/*": {"origins": ["http://192.168.0.21:3000", "dev.jonnattan.com"]}})
 # ===============================================================================
 # variables globales
 # ===============================================================================
 ROOT_DIR = os.path.dirname(__file__)
-
-SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
 
 # Variables globales para TEST de document manages en CCU
 strName = ''
@@ -118,7 +125,6 @@ def verify_password(username, password):
 def unauthorized():
     return make_response(jsonify({'message':'invalid credentials'}), 401)
 
-
 #===============================================================================
 # Se checkea el estado del servidor completo para reportar
 #===============================================================================
@@ -130,6 +136,35 @@ def checkProccess():
     json = checker.getInfo()
     del checker
     return jsonify(json)
+
+#===============================================================================
+# Cualquier pagina que ocupe JS desde este servidor para por ac'a
+#===============================================================================
+@app.route('/page/js/<path:namejs>')
+def process_jsfile( namejs ):
+    file_path = os.path.join(ROOT_DIR, 'static')
+    file_path = os.path.join(file_path, 'js')
+    logging.info('Call JS File: ' + file_path + '/' + str(namejs) )
+    return send_from_directory(file_path, str(namejs) )
+
+#===============================================================================
+# Formulario para probar los de CSFR Token Proteccion
+#===============================================================================
+@app.route('/page', methods=['GET'])
+def test__form_csrf():
+    logging.info("Pagina de edicion !! ")
+    return render_template( 'create.html' )
+
+@app.route('/page/csrf', methods=['POST'])
+def test_csrf():
+    logging.info("Reciv Solicitud con CSRF!! ")
+    return render_template( 'galery.html' )
+
+@app.route('/page/image/<path:name>', methods=['GET'])
+def galery_html( name ):
+    file_path = os.path.join(ROOT_DIR, 'static')
+    file_path = os.path.join(file_path, 'images')
+    return send_from_directory(file_path, str(name) )
 
 # ==============================================================================
 # Test con Edr
@@ -245,7 +280,7 @@ def sunDreams( subpath ):
 # ==============================================================================
 # Tests CCU Relacionados con los contratos y la generaci'on de estos.
 # ==============================================================================
-@app.route('/ccu/documents/sign', methods=['GET', 'POST'])
+@app.route('/ucc/documents/sign', methods=['GET', 'POST'])
 @csrf.exempt
 def proccess_Sign():
     logging.info("Dashboard D : " + str(request.data) )
@@ -259,62 +294,18 @@ def proccess_Sign():
     }
     return jsonify(dataTx)
 
-@app.route('/ccu/<path:rut>', methods=['POST','GET','PUT'])
-@csrf.exempt
-def page_html( rut ):
-    rutStr = str(rut)
+@app.route('/ucc/<path:rut>', methods=['GET'])
+def ucc_test_page_html( rut ):
+    uccMng = Ucc()
+    data = uccMng.getInfo( str(rut) )
+    del uccMng
+    if data != None :
+        logging.info('Data: ' +  str(data))
+        return render_template( 'ucc.html', user=data )
+    else :
+        return jsonify({'msg':'No se encuentra usuario'}), 404
 
-    name = 'Jonnattan Griffiths'
-    adrs = 'Atlantico 4004, Depto 124'
-    adrcom = 'Alvarez 4050'
-    phone = '273140'
-    mobile = '992116678'
-    commune = 'Talcahuano'
-    mail = 'jonnattan@gmail.com'
-    birth = '1982-12-01'
-
-    if( rut.find('13778103') >= 0 ) :
-        name = 'Natalia Mena'
-        adrs = 'Pacifico 4004, Depto 803'
-        adrcom = 'Alvarez 4050'
-        mobile = '992116678'
-        phone = '3445432'
-        commune = 'Viña del Mar'
-        mail = 'natalia@gmail.com'
-        birth = '1984-05-25'
-
-    if( rut.find('10283513') >= 0 ) :
-        name = 'Rigoberto Cuevas'
-        adrs = 'Michimalongo 4873, Depto 43'
-        adrcom = 'Alvarez 987'
-        mobile = '992116678'
-        phone = '3445432'
-        commune = 'Arauco'
-        mail = 'rigoberto@gmail.com'
-        birth = '1957-06-15'
-
-    if( rut.find('7992784') >= 0 ) :
-        name = 'Amelia Tapia'
-        adrs = 'Pacifico 45, Depto 803'
-        adrcom = 'Alvarez 4050'
-        mobile = '992116678'
-        phone = '3445432'
-        commune = 'Antofagasta'
-        mail = 'amelia.tapia@gmail.com'
-        birth = '2002-10-23'
-
-    logging.info('Rut: ' + rutStr + ' Name: ' + name)
-    return render_template( 'ccu.html', rut=rutStr, name=name, address=adrs, adrcom=adrcom, phone=phone, mobile=mobile, commune=commune, mail=mail, birth=birth )
-
-@app.route('/ccu/ccu.js')
-@csrf.exempt
-def process_CCUJS( ):
-    file_path = os.path.join(ROOT_DIR, 'static')
-    file_path = os.path.join(file_path, 'js')
-    logging.info('Java Script: ' + file_path )
-    return send_from_directory(file_path, 'ccu.js')
-
-@app.route('/ccu/document/contract/<path:name>', methods=['POST','GET'])
+@app.route('/ucc/document/contract/<path:name>', methods=['POST','GET'])
 @csrf.exempt
 def showContract( name ):
     global strName
@@ -339,7 +330,7 @@ def showContract( name ):
 # ==============================================================================
 # Cambia el ambiente al que est'a apuntando.
 # ==============================================================================
-@app.route('/cxp/change/<path:environment>', methods=['GET'])
+@app.route('/page/cxp/change/<path:environment>', methods=['GET'])
 @csrf.exempt
 def changeEnv( environment ):
     cxp = Sserpxelihc()
@@ -355,7 +346,7 @@ def changeEnv( environment ):
 #===============================================================================
 # Evalua para donde debe ir la pregunta
 #===============================================================================
-@app.route('/cxp/<path:subpath>', methods=['POST','GET','PUT'])
+@app.route('/page/cxp/<path:subpath>', methods=['POST','GET','PUT'])
 @csrf.exempt
 def cxpPost( subpath ):
     cxp = Sserpxelihc()
@@ -597,15 +588,6 @@ def images_logia( name ):
             return jsonify({'message':'Acceso no autorizado'}), 401
     else :
         return jsonify({'message':'Acceso no autorizado'}), 401
-#===============================================================================
-# para ver las fotos de MPOS
-#===============================================================================
-@app.route('/page', methods=['GET', 'POST'])
-@csrf.exempt
-def webRed():
-    logging.info("Reciv Solicitud!! ")
-    siteUrl = "https://www.jonnattan.com"
-    return render_template( 'create.html', destino = siteUrl )
 
 # ==============================================================================
 # Notificacion en CV
@@ -768,7 +750,7 @@ if __name__ == "__main__":
         listenPort = int(sys.argv[1])
         # app.run(ssl_context='adhoc', host='0.0.0.0', port=listenPort, debug=True)
         # app.run( ssl_context=('cert_jonnattan.pem', 'key_jonnattan.pem'), host='0.0.0.0', port=listenPort, debug=True)
-        app.run( host='0.0.0.0', port=listenPort, debug=True)
+        app.run( host='0.0.0.0', port=listenPort)
     except Exception as e:
         print("ERROR MAIN:", e)
 

@@ -4,80 +4,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Test CCU</title>
+  <title>Test CSRF</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-  <script type="text/javascript">
-    function redireccionar() {
-      setTimeout(function () {
-        var destino = document.getElementById("destino");
-        console.log("Destino : " + destino.value)
-        window.open(destino.value);
-      }, 5000);
-    }
-  </script>
-
-  <script type="module">
-    import { Toast } from 'bootstrap.esm.min.js'
-    Array.from(document.querySelectorAll('.toast'))
-      .forEach(toastNode => new Toast(toastNode))
-  </script>
 
 </head>
 
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
-    crossorigin="anonymous"></script>
-
   <div class="container" max-width="sm" style="padding:5px 0px 0px 0px;">
-    <div class="row">
-      <div class="col">
-        <nav class="navbar navbar-expand-lg bg-light">
-          <div class="container-fluid">
-            <a class="navbar-brand" href="#main">Principal</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-              aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                  <a class="nav-link active" aria-current="page" href="https://dev.jonnattan.com">Jonnattan</a>
-                </li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    Elige un rut
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/15173808-7">15173808-7</a></li>
-                    <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/8338985-0">8338985-0</a></li>
-                    <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/10283513-1">10283513-1</a></li>
-                    <li><a class="dropdown-item" href="https://dev.jonnattan.com/ccu/7992784-8">7992784-8</a></li>
-                    <li>
-                      <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item" href="#">Otras pruebas</a></li>
-                  </ul>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link disabled">Disabled</a>
-                </li>
-              </ul>
-              <form class="d-flex" role="search">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Rut</button>
-              </form>
-            </div>
-          </div>
-        </nav>
-      </div>
-    </div>
     <!-- La siguiente fila es con el boton -->
     <div class="row" style="padding:10px 0px 0px 0px;">
-      <form class="row g-3">
+      <form class="row g-3" action="/page/csrf" method="POST" autocomplete="on" >
         <div class="col">
           <div class="mb-3">
             <label for="exampleFormControlInput1" class="form-label">Rut</label>
@@ -89,17 +27,10 @@
             <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
           </div>
           <div class="mb-3">
-            <button type="button" class="btn btn-primary">Primary</button>
-            <!-- button type="button" class="btn btn-secondary">Secondary</button>
-          <button type="button" class="btn btn-success">Success</button>
-          <button type="button" class="btn btn-danger">Danger</button>
-          <button type="button" class="btn btn-warning">Warning</button>
-          <button type="button" class="btn btn-info">Info</button>
-          <button type="button" class="btn btn-light">Light</button>
-          <button type="button" class="btn btn-dark">Dark</button>
-          <button type="button" class="btn btn-link">Link</button -->
+            <input type="submit" class="btn btn-primary" value="Test CSRF">
           </div>
         </div>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       </form>
     </div>
 
@@ -116,7 +47,6 @@
         {% endif %}
       </div>
     </div>
-
   </div>
 </body>
 

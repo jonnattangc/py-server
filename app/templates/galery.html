@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js" integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/galleria/1.5.7/galleria.min.js" integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7fsdfsdfl1kPzQho1wx4JwY8wC"></script>
+      <style type="text/css">
+        .galleria {
+          position: center;
+          top: 10px;
+          bottom: 60px;
+          left: 10px;
+          right: 10px;
+          overflow: hidden;
+        }
+      </style>
+      <title>Galery Test</title>
+    </head>
+    <body>
+        <div class="galleria">
+          <img src="image/DSC00290.JPG" alt="Bedroom" >
+          <img src="image/DSC00291.JPG" alt="Bedroom" >
+        </div>
+        <script>
+            (function() {
+                Galleria.loadTheme('https://cdnjs.cloudflare.com/ajax/libs/galleria/1.5.7/themes/classic/galleria.classic.min.js');
+                Galleria.run('.galleria');
+            }());
+        </script>
+    </body>
+</html>
