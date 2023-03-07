@@ -13,7 +13,7 @@ try:
     from flask_login import ( LoginManager, UserMixin, current_user, login_required, login_user )
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
     # Clases personales
-    from utils import Banks, Deposits, Cipher
+    from utils import Banks, Cipher
     from coordinator import Coordinator
     from security import Security
     from check import Checker
@@ -49,7 +49,7 @@ root.addHandler(handler)
 
 logger = logging.getLogger('HTTP')
 # ===============================================================================
-# COnfiguraciones generales del servidor Web
+# Configuraciones generales del servidor Web
 # ===============================================================================
 
 SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
@@ -65,24 +65,18 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, resources={r"/page/*": {"origins": ["http://192.168.0.21:3000", "dev.jonnattan.com"]}})
+# cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
+cors = CORS(app, resources={r"/page/*": {"origins": ["http://192.168.0.15:3000", "dev.jonnattan.com"]}})
 # ===============================================================================
 # variables globales
 # ===============================================================================
 ROOT_DIR = os.path.dirname(__file__)
 
-# Variables globales para TEST de document manages en CCU
-strName = ''
-strContent = ''
-strType = ''
-strId = ''
-strDoc = ''
-strRef = ''
-
 #===============================================================================
 # Redirige
 #===============================================================================
 @app.route('/', methods=['GET', 'POST'])
+@csrf.exempt
 def index():
     logging.info("Reciv solicitude endpoint: /" )
     return redirect('/infojonna'), 302
@@ -91,6 +85,7 @@ def index():
 # Redirige
 #===============================================================================
 @app.route('/<path:subpath>', methods=('GET', 'POST'))
+@csrf.exempt
 def processOtherContext( subpath ):
     logging.info("Reciv solicitude endpoint: " + subpath )
     return redirect('/infojonna'), 302
@@ -99,6 +94,7 @@ def processOtherContext( subpath ):
 # Redirige a mi blog personal
 #===============================================================================
 @app.route('/infojonna', methods=['GET', 'POST'])
+@csrf.exempt
 def infoJonnaProccess():
     logging.info("Reciv solicitude endpoint: /infojonna" )
     return jsonify({
@@ -135,6 +131,16 @@ def checkProccess():
     checker = Checker()
     json = checker.getInfo()
     del checker
+    return jsonify(json)
+
+@app.route('/page/usergenerate', methods=['GET'])
+@csrf.exempt
+@auth.login_required
+def usergeneratate(  ):
+    basicAuth = Security()
+    basicAuth.generateUser('jonnattan', 'wsxzaq123')
+    del basicAuth
+    json = {}
     return jsonify(json)
 
 #===============================================================================
@@ -210,49 +216,59 @@ def sunDreams( subpath ):
     logging.info("Reciv H : " + str(request.headers) )
     logging.info("Reciv D: " + str(request.data) )
     m1 = time.monotonic()
-    response = None
+    diff = 0
+    request_data = request.get_json()
     url = os.environ.get('SLACK_NOTIFICATION','None')
     headers = {'Content-Type': 'application/json'}
-    request_data = request.get_json()
-    monto = str(request_data['amount'])
-    fecha = str(request_data['date'])
-    name = str(request_data['name'])
-    rut = str(request_data['identity'])
-    bank = str(request_data['bank'])
-    account = str(request_data['account'])
-    code = str(request_data['code'])
+    response = None
+    request_tx = {}
 
-    request_tx = {
-            'username': 'TT-Pay: Notificación de depósito',
-            'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
-            'attachments': [
-                {
-                    'fallback'      : 'Nuevo deposito',
-                    'pretext'       : 'Datos de Origen',
-                    'text'          : 'Nombre: ' + name,
-                    'color'         : 'good',
-                    'fields'        : [
-                        {
-                            'title': 'Rut',
-                            'value': rut,
-                            'short': True
-                        },{
-                            'title': 'Banco',
-                            'value': bank,
-                            'short': True
-                        },{
-                            'title': 'Cuenta',
-                            'value': account,
-                            'short': True
-                        },{
-                            'title': 'Código',
-                            'value': code,
-                            'short': True
-                        }
-                    ]
-                }
-            ]
-        }
+    if str(subpath).find('deposito') >= 0 :
+        monto = str(request_data['amount'])
+        fecha = str(request_data['date'])
+        name = str(request_data['name'])
+        rut = str(request_data['identity'])
+        bank = str(request_data['bank'])
+        account = str(request_data['account'])
+        code = str(request_data['code'])
+
+        request_tx = {
+                'username': 'TT-Pay: Notificación de depósito',
+                'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
+                'attachments': [
+                    {
+                        'fallback'      : 'Nuevo deposito',
+                        'pretext'       : 'Datos de Origen',
+                        'text'          : 'Nombre: ' + name,
+                        'color'         : 'good',
+                        'fields'        : [
+                            {
+                                'title': 'Rut',
+                                'value': rut,
+                                'short': True
+                            },{
+                                'title': 'Banco',
+                                'value': bank,
+                                'short': True
+                            },{
+                                'title': 'Cuenta',
+                                'value': account,
+                                'short': True
+                            },{
+                                'title': 'Código',
+                                'value': code,
+                                'short': True
+                            }
+                        ]
+                    }
+                ]
+            }        
+    else :
+        error_msg = 'Favor cambiar url !!! \n' + str(request_data['message'])
+        request_tx = {
+                'username': '[jonnattan.com]: Notificación Recibida',
+                'text': error_msg, 
+            }
 
     try :
         logging.info("URL : " + url )
@@ -272,9 +288,14 @@ def sunDreams( subpath ):
     except Exception as e:
         print("ERROR Mensajes:", e)
 
-    logging.info("Time Response in " + str(diff) + " sec." )
+    logging.info("Time Response in " + str(diff) + " sec.")
+                     
     
     dataTx = {"ok": True}
+
+
+
+    
     return jsonify(dataTx)
 
 # ==============================================================================
@@ -308,12 +329,6 @@ def ucc_test_page_html( rut ):
 @app.route('/ucc/document/contract/<path:name>', methods=['POST','GET'])
 @csrf.exempt
 def showContract( name ):
-    global strName
-    global strContent
-    global strType
-    global strId
-    global strDoc
-    global strRef
     if ( request.method == 'POST' ) :
         strName = str(name)
         request_data = request.get_json()
@@ -612,33 +627,6 @@ def processCV( subpath ):
     return jsonify(data)
 
 # ==============================================================================
-# Conexi'on a AWS en python 
-# ==============================================================================
-@app.route('/page/aws/contents', methods=['GET'])
-@csrf.exempt
-def awsTest():
-    http_code = 409
-    data = {}
-    m1 = time.monotonic_ns()
-    try :
-        #logging.info("Reciv Header : " + str(request.headers) )
-        #logging.info("Reciv Data   : " + str(request.data) )
-        aws = AwsUtil()
-        photos = aws.getPhotos()
-        docs = aws.getDocs()
-        del aws
-        data = {
-            'photos' : str(photos),
-            'docs' : str(docs)
-        }
-        http_code = 200
-    except Exception as e:
-        print("ERROR TEST AWS:", e)
-
-    diff = time.monotonic_ns() - m1
-    logging.info('Service Time Response in ' + str(diff) + ' nsec' )
-    return jsonify(data), http_code 
-# ==============================================================================
 # Notificacion en CV
 # ==============================================================================
 @app.route('/page/geo/search', methods=['POST'])
@@ -692,36 +680,83 @@ def findGeoPos( ):
 # ==============================================================================
 # Servicio para validar el recaptcha
 # ==============================================================================
-@app.route('/page/recaptcha/<path:subpath>', methods=['GET'])
+@app.route('/page/recaptcha', methods=['GET'])
 @csrf.exempt
-def validaterecaptcha( subpath ):
-    logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
+def validaterecaptcha( ):
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
     token = str(request.args.get('token', 'AABBCCDD'))
     secret = str(SECRET_KEY)
     headers = { 'Content-Type': 'application/json' }
-    logging.info("token : " + token )
+    logging.info("token reccibido de largo " + str(len(token)) )
     diff = 0
     m1 = time.monotonic()
     data_response = {}
     code = 409
     if token != 'AABBCCDD' and secret != 'NO_SECRET_KEY' :
         url = 'https://www.google.com/recaptcha/api/siteverify?secret='+secret+'&response='+token
-        logging.info("URL : " + url )
+        # logging.info("URL : " + url )
         resp = requests.get(url, data = request.data, headers = headers, timeout = 40)
         diff = time.monotonic() - m1
         code = resp.status_code
         if( resp.status_code == 200 ) :
             data_response = resp.json()
-            logging.info("Response OK" + str( data_response ) )
+            logging.info("Response OK: " + str( data_response ) )
         else :
             data_response = resp.json()
-            logging.info("Response NOK" + str( data_response ) )
+            logging.info("Response NOK: " + str( data_response ) )
     
     logging.info("Time Response in " + str(diff) + " sec." )
 
     return jsonify(data_response), code
+
+# ==============================================================================
+# Conexi'on a AWS en python para Acceder S3
+# ==============================================================================
+@app.route('/page/aws/s3/<path:action>', methods=['GET'])
+@csrf.exempt
+@auth.login_required
+def s3Processor( action ):
+    aws = AwsUtil()
+    data_response, http_status = aws.requestProcess( request, 's3/' + str(action) )
+    del aws
+    return jsonify(data_response), http_status
+
+# ==============================================================================
+# Conexi'on a AWS en python para envio de SMS
+# ==============================================================================
+@app.route('/page/aws/sns/<path:action>', methods=['GET','POST'])
+@csrf.exempt
+@auth.login_required
+def smsProcessor( action ):
+    aws = AwsUtil()
+    data_response, http_status = aws.requestProcess( request, 'sns/' + str(action)  )
+    del aws
+    return jsonify(data_response), http_status
+
+# ==============================================================================
+# Conexi'on a AWS Pinpoint
+# ==============================================================================
+@app.route('/page/aws/pinpoint/<path:action>', methods=['GET','POST'])
+@csrf.exempt
+@auth.login_required
+def pinpointProcessor( action ):
+    aws = AwsUtil()
+    data_response, http_status = aws.requestProcess( request, 'pinpoint/' + str(action)  )
+    del aws
+    return jsonify(data_response), http_status
+
+# ==============================================================================
+# Conexi'on a AWS SES
+# ==============================================================================
+@app.route('/page/aws/ses/<path:action>', methods=['GET','POST'])
+@csrf.exempt
+@auth.login_required
+def sesProcessor( action ):
+    aws = AwsUtil()
+    data_response, http_status = aws.requestProcess( request, 'ses/' + str(action)  )
+    del aws
+    return jsonify(data_response), http_status
 
 # ===============================================================================
 # Favicon

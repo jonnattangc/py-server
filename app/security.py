@@ -54,7 +54,8 @@ class Security() :
                     passwordBd = str(row['password'])
                     userBd = str(row['username'])
                 if userBd != None and passwordBd != None :
-                    if userBd != username or check_password_hash(password, passwordBd) :
+                    check = check_password_hash(passwordBd, password )
+                    if userBd != username or not check :
                       userBd = None
 
         except Exception as e:
