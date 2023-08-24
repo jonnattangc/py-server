@@ -22,6 +22,7 @@ try:
     from memorize import Memorize
     from granl import GranLogia
     from utilaws import AwsUtil
+    from utilwaza import UtilWaza
     from ucc import Ucc
 
 except ImportError:
@@ -262,12 +263,12 @@ def sunDreams( subpath ):
                         ]
                     }
                 ]
-            }        
+            }
     else :
         error_msg = 'Favor cambiar url !!! \n' + str(request_data['message'])
         request_tx = {
                 'username': '[jonnattan.com]: Notificación Recibida',
-                'text': error_msg, 
+                'text': error_msg,
             }
 
     try :
@@ -283,19 +284,19 @@ def sunDreams( subpath ):
             logging.info('Response Slack' + str( response ) )
         elif( response != None and response.status_code != 200 ) :
             logging.info("Response NOK" + str( response ) )
-        else : 
+        else :
             logging.info("Nose pudo notificar por Slak")
     except Exception as e:
         print("ERROR Mensajes:", e)
 
     logging.info("Time Response in " + str(diff) + " sec.")
-                     
-    
+
+
     dataTx = {"ok": True}
 
 
 
-    
+
     return jsonify(dataTx)
 
 # ==============================================================================
@@ -387,7 +388,7 @@ def getStateCard():
             'state': states[i]
         })
         i = i + 1
-    
+
     return jsonify( {'states':data} )
 # ==============================================================================
 # Para el juego del memorize
@@ -420,6 +421,26 @@ def reset():
     return jsonify(data), code
 
 # ==============================================================================
+# Waza
+# ==============================================================================
+@app.route('/waza/<path:subpath>', methods=['POST','GET','PUT'])
+@csrf.exempt
+@auth.login_required
+def waza( subpath ):
+    waza = UtilWaza()
+    msg, code = waza.requestProcess(request, subpath)
+    del waza
+    return msg, code
+
+@app.route('/waza', methods=['POST','GET','PUT'])
+@csrf.exempt
+def wazasp( ):
+    waza = UtilWaza()
+    msg, code = waza.requestProcess(request, None)
+    del waza
+    return msg, code
+
+# ==============================================================================
 # Realiza login en la pagina de la Gran Logia usando para ello scraper
 # ==============================================================================
 @app.route('/logia/usergl/login', methods=['POST'])
@@ -431,7 +452,7 @@ def loginGL():
     code  = 401
     user = ''
     apyKey = request.headers.get('API-Key')
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -446,7 +467,7 @@ def loginGL():
                 passwd = str(datos[1]).strip()
                 if user != '' and passwd != '' :
                     gl = GranLogia()
-                    message, code  = gl.loginSystem( user, passwd ) 
+                    message, code  = gl.loginSystem( user, passwd )
                     del gl
     data = {
         'message' : str(message),
@@ -467,7 +488,7 @@ def access_evaluateGL():
     apyKey = request.headers.get('API-Key')
     code = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -482,7 +503,7 @@ def access_evaluateGL():
                 grade = str(datos[1]).strip()
                 if user != '' and grade != '' :
                     gl = GranLogia()
-                    message, code, http_code  = gl.validateAccess( user, grade ) 
+                    message, code, http_code  = gl.validateAccess( user, grade )
                     del gl
     data = {
         'message' : str(message),
@@ -502,7 +523,7 @@ def getGradeQH():
     message = "No autorizado"
     grade = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
         request_data = request.get_json()
         data_cipher = str(request_data['user'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -514,7 +535,7 @@ def getGradeQH():
             user = data_clear.strip()
             if user != '' :
                 gl = GranLogia()
-                message, grade, http_code  = gl.getGrade( user ) 
+                message, grade, http_code  = gl.getGrade( user )
                 del gl
     data = {
         'message' : str(message),
@@ -536,7 +557,7 @@ def access_docs_logia():
     cipher = Cipher()
     data = {}
     name_doc = ''
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' : 
+    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + str(data_cipher) )
@@ -551,7 +572,7 @@ def access_docs_logia():
                 id_qh = str(datos[2]).strip()
                 if name_doc != '' and grade_doc != '' and id_qh != '' :
                     gl = GranLogia()
-                    message, code, http_code  = gl.validateAccess( id_qh, grade_doc ) 
+                    message, code, http_code  = gl.validateAccess( id_qh, grade_doc )
                     del gl
 
     if code != -1 and message != None and http_code == 200 :
@@ -644,13 +665,13 @@ def findGeoPos( ):
         address = address.replace('block', 'edificio')
         address = address.replace('.', ' ')
         address = address.replace('  ', ' ')
-        address = address.replace(' ', '%20')
+        address = address.replace(' ', '+')
         logging.info("data_cipher: " + address )
         url = 'https://nominatim.openstreetmap.org/search?q=' + address
-        url += '&country=Chile'
-        url += '&format=json'
-        url += '&polygon_geojson=1'
-        url += '&addressdetails=1'
+        #url += '&country=Chile'
+        url += '&format=jsonv2'
+        #url += '&polygon_geojson=1'
+        #url += '&addressdetails=1'
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json' }
         m1 = time.monotonic_ns()
         logging.info("URL : " + url )
@@ -674,8 +695,8 @@ def findGeoPos( ):
 
     except Exception as e:
         print("ERROR POST:", e)
-    
-    return jsonify(data), code 
+
+    return jsonify(data), code
 
 # ==============================================================================
 # Servicio para validar el recaptcha
@@ -705,7 +726,7 @@ def validaterecaptcha( ):
         else :
             data_response = resp.json()
             logging.info("Response NOK: " + str( data_response ) )
-    
+
     logging.info("Time Response in " + str(diff) + " sec." )
 
     return jsonify(data_response), code

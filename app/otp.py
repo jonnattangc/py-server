@@ -4,6 +4,7 @@ try:
     import os
     import pymysql.cursors
     import uuid
+    import math
     from datetime import datetime, timedelta
     import random
     from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,7 +22,7 @@ class Otp() :
     database = 'gral-purpose'
     # caracteristica de la OTP
     # esto puede salir de la configuraci'on de un cliente X cualquiera
-    duration_min = 15
+    duration_min = 10
     attempts = 1
     length_code = 8
 
@@ -46,28 +47,30 @@ class Otp() :
 
     def isConnect(self) :
         return self.db != None
-    
+
     def getLengthCode(self) :
         return self.length_code
-    
+
     def getDuration(self) :
         return self.duration_min
-    
+
     def getAttempts(self) :
         return self.attempts
 
-    def getRandomOtp(self) :
+    def getRandomOtp(self, len ) :
+        izq = math.pow(10, len - 1)
+        der = math.pow(10, len) - 1
+        otp = int(random.uniform(izq, der))
         ref = uuid.uuid4()
-        otp = int(random.uniform(10000000, 99999999))
         return str(otp) , str(ref)
 
     def mailOtpValidate( self, channel, otpToValidate ) :
         logging.info("Verifico OTP de Mail u Obtengo Referencia" )
         valid = None
         ref = None
-        otp = None 
+        otp = None
         otp_expirate = True
-        isMail = str(channel).find('@') > 0 and str(channel).find('.') > 0 
+        isMail = str(channel).find('@') > 0 and str(channel).find('.') > 0
         try :
             if self.db != None :
                 cursor = self.db.cursor()
@@ -80,7 +83,7 @@ class Otp() :
                 results = cursor.fetchall()
                 for row in results:
                     otp = str(row['otp']).strip()
-                    ref = str(row['ref']).strip()   
+                    ref = str(row['ref']).strip()
                     exp = str(row['expirate_at']).strip()
 
                 date_exp = datetime.strptime(exp,"%Y-%m-%d %H:%M:%S")
@@ -91,10 +94,40 @@ class Otp() :
             # Si la OTP se envio por mail, se valida inmediatamente
             if otp != None and ref != None and isMail :
                 valid = check_password_hash( otp, str(otpToValidate).strip() ) and not otp_expirate
-            
+
         except Exception as e:
             print("ERROR BD:", e)
         return valid, ref
+
+    def validateOtp( self, reference, otpToValidate ) :
+        logging.info("Verifico OTP" )
+        valid = False
+        otp_saved = None
+        otp_expirate = True
+        code = 409
+        try :
+            if self.db != None :
+                cursor = self.db.cursor()
+                sql = """select * from Otp where ref = %s and status = %s"""
+                cursor.execute(sql, (str(reference), 'PENDING'))
+                results = cursor.fetchall()
+                for row in results:
+                    otp_saved = str(row['otp']).strip()
+                    exp = str(row['expirate_at']).strip()
+                date_exp = datetime.strptime(exp,"%Y-%m-%d %H:%M:%S")
+                now = datetime.now()
+                otp_expirate = now > date_exp
+                logging.info("Verifico expiracion: " + str(now.strftime("%Y-%m-%d %H:%M:%S")) + " > " + str(date_exp.strftime("%Y-%m-%d %H:%M:%S")) + " ?? ==>> " +  str(otp_expirate) )
+
+            if otp_saved != None :
+                valid = check_password_hash( otp_saved, str(otpToValidate).strip() ) and not otp_expirate
+                if valid == True :
+                    code = 200
+                    self.burnOtp( reference, valid )
+        except Exception as e:
+            print("ERROR BD:", e)
+        return valid, code
+
 
     def burnOtp(self, ref = '', valid = False , attempt = 1 ) :
         logging.info("Quemo la OTP de Ref " + str(ref))
@@ -111,23 +144,31 @@ class Otp() :
             print("ERROR BD:", e)
             self.db.rollback()
 
-    def createOtp(self, mobile = '', mail = '') :
+    def createOtp(self, mobile = '', mail = '', whatsapp = '', duration_min = 0, len = 6 ) :
         logging.info("Genera nueva instancia de OTP")
         otp = None
         ref = None
         try :
             if self.db != None :
                 cursor = self.db.cursor()
-                otp, ref = self.getRandomOtp()
-                sql = """INSERT INTO Otp (create_at, expirate_at, otp, ref, mail, mobile, status ) VALUES(%s, %s, %s, %s, %s, %s, %s)"""
+                otp, ref = self.getRandomOtp( len )
+                sql = """INSERT INTO Otp (create_at, expirate_at, otp, ref, mail, mobile, status, channel ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"""
                 now = datetime.now()
-                exp = now + timedelta( minutes=self.duration_min ) 
-                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), exp.strftime("%Y-%m-%d %H:%M:%S"), 
-                        generate_password_hash(otp), str(ref), str(mail), str(mobile), 'PENDING' ))
+
+                channel = 'mail'
+                if mobile != '' : channel = 'sms'
+                if whatsapp != '' : channel = 'whatsapp'
+
+                if duration_min == 0 :
+                    duration_min = self.duration_min
+
+                exp = now + timedelta( minutes=duration_min )
+                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), exp.strftime("%Y-%m-%d %H:%M:%S"),
+                        generate_password_hash(otp), str(ref), str(mail), str(mobile), 'PENDING', str(channel) ))
                 self.db.commit()
 
         except Exception as e:
             print("ERROR BD:", e)
             self.db.rollback()
-        
+
         return otp, ref
