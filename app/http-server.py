@@ -290,13 +290,7 @@ def sunDreams( subpath ):
         print("ERROR Mensajes:", e)
 
     logging.info("Time Response in " + str(diff) + " sec.")
-
-
     dataTx = {"ok": True}
-
-
-
-
     return jsonify(dataTx)
 
 # ==============================================================================
@@ -423,8 +417,7 @@ def reset():
 # ==============================================================================
 # Waza
 # ==============================================================================
-@app.route('/waza/<path:subpath>', methods=['POST','GET','PUT'])
-@csrf.exempt
+@app.route('/page/waza/<path:subpath>', methods=['POST'])
 @auth.login_required
 def waza( subpath ):
     waza = UtilWaza()
@@ -432,6 +425,9 @@ def waza( subpath ):
     del waza
     return msg, code
 
+# ==============================================================================
+# Hook desde la API de Waza
+# ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
 def wazasp( ):
@@ -731,6 +727,43 @@ def validaterecaptcha( ):
 
     return jsonify(data_response), code
 
+# ==============================================================================
+# Servicio para validar el hcaptcha
+# ==============================================================================
+@app.route('/page/hcaptcha', methods=['GET','POST'])
+@csrf.exempt
+def validatehcaptcha( ):
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data: " + str(request.data) )
+    request_data = request.get_json()
+    headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+
+    token = str(request_data['token'])
+    secret = str(request_data['secret'])
+    sitekey = str(request_data['sitekey'])
+    
+    logging.info("token recibido de largo " + str(len(token)) )
+    diff = 0
+    m1 = time.monotonic()
+    data_response = {}
+    code = 409
+    if token != 'None' and secret != 'None' and sitekey != 'None':
+        url = 'https://hcaptcha.com/siteverify'
+        datos = {'secret': secret,'response': token,'sitekey': sitekey }
+        # logging.info("URL : " + url )
+        resp = requests.post(url, data = datos, headers = headers, timeout = 40)
+        diff = time.monotonic() - m1
+        code = resp.status_code
+        if( resp.status_code == 200 ) :
+            data_response = resp.json()
+            logging.info("Response OK: " + str( data_response ) )
+        else :
+            data_response = resp.json()
+            logging.info("Response NOK: " + str( data_response ) )
+
+    logging.info("Time Response in " + str(diff) + " sec." )
+
+    return jsonify(data_response), code
 # ==============================================================================
 # Conexi'on a AWS en python para Acceder S3
 # ==============================================================================
