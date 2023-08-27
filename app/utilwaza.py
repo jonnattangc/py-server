@@ -22,7 +22,7 @@ class UtilWaza() :
     password = os.environ.get('PASS_BD','None')
     database = 'gral-purpose'
     environment = None
-    bearer_token = 'Bearer EAAYptQZApMksBOZC2a5N8bX4ybT1g1iZBcB632MF0hNnqfy56mjcHY8b7WOc2AijVUsvgW7yFlIR6h5E9YcKEV9N5ZAiRdYvu6SRJ4gud7oRhMcbi9mZBCykrhMRzboMcXgX9qmUYvkLGd9tb2dq9k8XAT7d2WxXWlBTvZBTBdnZB7lKkXiKelmUZARGx748XMccSNHMepFwAlU7EmVZB3XeeohMBnNYcNdoD1gZDZD'
+    bearer_token = 'Bearer EAAYptQZApMksBOzpGzDUhWPiGTs1ZC82GSI9IB4o9wHFZByluSgZBW7KK4KOjL1h4fQJ1zJkv2HZCZAW6rQZBBsSE6tGq3oESg04iWZCOoIvdSdlz5XPSeIfhwcg54iEEgmDhiu74ZAmIcpXu5PZBYkZBKD9Ehh1FduOhJb8ZCIGWT8FHBixrZAVcQkroh4kxQXLh1hTVj2TnYD54pwySSVHN5zZCFXrytk1XQeuPt'
     headers = None
 
     def __init__(self) :
@@ -232,12 +232,14 @@ class UtilWaza() :
         reference = str(data_rx['reference'])
         otp = str(data_rx['otp'])
         otpProccesor = Otp()
-        isValid, code = otpProccesor.validateOtp( reference, otp )
+        isValid, reason = otpProccesor.validateOtp( reference, otp )
         del otpProccesor
-        data = {
-            'success' : isValid
+        dataTx = {
+            'success' : isValid,
+            'statusDescription' : reason
         }
-        return jsonify(data), code
+        logging.info("######### RESPONSE : " + str(dataTx) )
+        return jsonify(dataTx), 200
 
     def requestProcess(self, request, subpath ) :
             logging.info('########################## ' + str(request.method) + ' ###################################')
@@ -245,8 +247,8 @@ class UtilWaza() :
             logging.info("Contex: " + str(subpath) )
             logging.info("Reciv Data: " + str(request.data) )
             # valores por defecto
-            data_response = jsonify({'statusCode': 200, 'statusDescription': 'Servicio ejecutado exitosamente' })
-            errorCode = 200
+            data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error en la ejecucion del servicio' })
+            errorCode = 500
             request_data = request.get_json()
             try :
                 m1 = time.monotonic()

@@ -103,30 +103,40 @@ class Otp() :
         logging.info("Verifico OTP" )
         valid = False
         otp_saved = None
+        otp_state = None
         otp_expirate = True
-        code = 409
+        reason = 'OTP Completamente valida'
         try :
             if self.db != None :
                 cursor = self.db.cursor()
-                sql = """select * from Otp where ref = %s and status = %s"""
-                cursor.execute(sql, (str(reference), 'PENDING'))
+                sql = """select * from Otp where ref = %s"""
+                cursor.execute(sql, (str(reference)))
                 results = cursor.fetchall()
                 for row in results:
                     otp_saved = str(row['otp']).strip()
+                    otp_state = str(row['status']).strip()
                     exp = str(row['expirate_at']).strip()
                 date_exp = datetime.strptime(exp,"%Y-%m-%d %H:%M:%S")
                 now = datetime.now()
                 otp_expirate = now > date_exp
                 logging.info("Verifico expiracion: " + str(now.strftime("%Y-%m-%d %H:%M:%S")) + " > " + str(date_exp.strftime("%Y-%m-%d %H:%M:%S")) + " ?? ==>> " +  str(otp_expirate) )
-
+                logging.info("Status OTP: " +  otp_state )
             if otp_saved != None :
-                valid = check_password_hash( otp_saved, str(otpToValidate).strip() ) and not otp_expirate
+                valid = check_password_hash( otp_saved, str(otpToValidate).strip() )
                 if valid == True :
-                    code = 200
-                    self.burnOtp( reference, valid )
+                    if otp_expirate == True : 
+                        reason = 'La otp está expirada, no se puede validar'
+                        valid = False
+                    if otp_state == 'PENDING' : 
+                        self.burnOtp( reference, valid )
+                    else :
+                        reason = 'La otp ya fue validada anteriormente'
+                        valid = False
+                else :
+                    reason = 'La otp no coincide con la enviada al móvil'
         except Exception as e:
             print("ERROR BD:", e)
-        return valid, code
+        return valid, reason
 
 
     def burnOtp(self, ref = '', valid = False , attempt = 1 ) :

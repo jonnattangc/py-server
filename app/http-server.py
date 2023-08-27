@@ -66,8 +66,8 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-# cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
-cors = CORS(app, resources={r"/page/*": {"origins": ["http://192.168.0.15:3000", "dev.jonnattan.com"]}})
+cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
+# cors = CORS(app, resources={r"/page/*": {"origins": ["dev.jonnattan.com"]}})
 # ===============================================================================
 # variables globales
 # ===============================================================================
@@ -419,6 +419,7 @@ def reset():
 # ==============================================================================
 @app.route('/page/waza/<path:subpath>', methods=['POST'])
 @auth.login_required
+@csrf.exempt
 def waza( subpath ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, subpath)
