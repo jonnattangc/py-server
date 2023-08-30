@@ -17,6 +17,12 @@ ENV USER_BD_LOGIA ''
 ENV PASS_BD_LOGIA ''
 ENV NOTIFICATION_URL ''
 ENV HUB_SELENIUM_URL ''
+ENV AWS_PINPOINT_APP_ID ''
+ENV API_KEY_ROBOT_UPTIME ''
+ENV ATTLASIAN_TOKEN ''
+ENV ATTLASIAN_URL= ''
+ENV ATTLASIAN_USER= ''
+ENV WAZA_BEARER_TOKEN ''
 
 ENV FLASK_APP app
 ENV FLASK_DEBUG development
@@ -41,3 +47,4 @@ EXPOSE 8085
 CMD [ "python", "http-server.py", "8085"]
 # python3 http-server.py 8085
 # CMD [ "/bin/sh", "./run.sh" ]
+# pip freeze > requirements.txt
