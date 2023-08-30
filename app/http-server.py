@@ -23,6 +23,7 @@ try:
     from granl import GranLogia
     from utilaws import AwsUtil
     from utilwaza import UtilWaza
+    from utilattlasian import UtilAttlasian
     from ucc import Ucc
 
 except ImportError:
@@ -427,6 +428,18 @@ def waza( subpath ):
     return msg, code
 
 # ==============================================================================
+# Status del sistema
+# ==============================================================================
+@app.route('/page/status', methods=['GET'])
+@auth.login_required
+@csrf.exempt
+def statusSystem() :
+    checker = Checker()
+    response, code = checker.getStatusPages()
+    del checker
+    return jsonify(response), code
+
+# ==============================================================================
 # Hook desde la API de Waza
 # ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
@@ -435,6 +448,17 @@ def wazasp( ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, None)
     del waza
+    return msg, code
+
+# ==============================================================================
+# Attlasian
+# ==============================================================================
+@app.route('/page/attlasian/<path:subpath>', methods=['POST','GET','PUT'])
+@csrf.exempt
+def attlasian( subpath ):
+    util = UtilAttlasian()
+    msg, code = util.requestProcess(request, subpath)
+    del util
     return msg, code
 
 # ==============================================================================

@@ -20,9 +20,10 @@ class UtilWaza() :
     host = os.environ.get('HOST_BD','None')
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
+    waza_token = os.environ.get('WAZA_BEARER_TOKEN','None')
     database = 'gral-purpose'
     environment = None
-    bearer_token = 'Bearer EAAYptQZApMksBOzpGzDUhWPiGTs1ZC82GSI9IB4o9wHFZByluSgZBW7KK4KOjL1h4fQJ1zJkv2HZCZAW6rQZBBsSE6tGq3oESg04iWZCOoIvdSdlz5XPSeIfhwcg54iEEgmDhiu74ZAmIcpXu5PZBYkZBKD9Ehh1FduOhJb8ZCIGWT8FHBixrZAVcQkroh4kxQXLh1hTVj2TnYD54pwySSVHN5zZCFXrytk1XQeuPt'
+    bearer_token = 'Bearer ' + str(waza_token)
     headers = None
 
     def __init__(self) :

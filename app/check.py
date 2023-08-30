@@ -4,6 +4,7 @@ try:
     import os
     import time
     import json
+    import requests
     import pymysql.cursors
     from datetime import datetime, timedelta
     from utils import Banks
@@ -19,6 +20,8 @@ class Checker() :
     host = os.environ.get('HOST_BD','None')
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
+    api_key = os.environ.get('API_KEY_ROBOT_UPTIME','None')
+
     database = 'security'
 
     def __init__(self) :
@@ -55,3 +58,32 @@ class Checker() :
         }
         logging.info("Response in " + str(time_response) + " ms")
         return data
+    
+    def getStatusPages(self) : 
+        data = {'statusCode': -1, 'statusDescription': 'Error' }
+        code = 402
+
+        try :
+            data_json = {
+                'api_key' : str(self.api_key)
+            }
+            headers = {'Content-Type': 'application/json'}
+            # logging.info("Request Trx " + str(data_json) )
+            url = 'https://api.uptimerobot.com/v2/getMonitors'
+            logging.info("URL : " + url )
+            response = requests.post(url, data = json.dumps(data_json), headers = headers, timeout = 40)
+            if response.status_code != None :
+                code = response.status_code
+                if response.status_code == 200 :
+                    data_response = response.json()
+                    logging.info("Response JSON: " + str( data_response ) )
+                    data = {
+                        'data'   : data_response,
+                        'statusCode' : 0,
+                        'statusDescription': 'Ok'
+                    }
+        except Exception as e:
+            print("ERROR Status:", e)
+
+        return data, code
+
