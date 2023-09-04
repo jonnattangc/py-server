@@ -473,6 +473,7 @@ def attlasian( subpath ):
 # Realiza login en la pagina de la Gran Logia usando para ello scraper
 # ==============================================================================
 @app.route('/logia/usergl/login', methods=['POST'])
+@csrf.exempt
 def loginGL():
     #logging.info("Reciv Header : " + str(request.headers) )
     #logging.info("Reciv Data   : " + str(request.data) )
@@ -762,7 +763,7 @@ def awsProcessAction( action ):
 # ==============================================================================
 # Carga Archivo Shape de todos los paises de Sudamerica
 # ==============================================================================
-@app.route('/page/geo/<path:subpath>', methods=['GET','POST','PUT'])
+@app.route('/page/geo/<path:subpath>', methods=['GET','POST'])
 @csrf.exempt
 @auth.login_required
 def processGeoFeature( subpath ):
