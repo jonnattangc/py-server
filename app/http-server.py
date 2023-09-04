@@ -23,6 +23,7 @@ try:
     from granl import GranLogia
     from utilaws import AwsUtil
     from utilwaza import UtilWaza
+    from utilgeo import GeoPosUtil
     from utilattlasian import UtilAttlasian
     from ucc import Ucc
 
@@ -191,6 +192,7 @@ def dernedeProcess( subpath ):
 # ==============================================================================
 @app.route('/cmkt/<path:subpath>', methods=['GET', 'POST'])
 @csrf.exempt
+@auth.login_required
 def cryptoMrk(subpath) :
     data = ''
     m1 = time.monotonic_ns()
@@ -213,6 +215,7 @@ def cryptoMrk(subpath) :
 # ==============================================================================
 @app.route('/dreams/<path:subpath>', methods=['GET', 'POST'])
 @csrf.exempt
+@auth.login_required
 def sunDreams( subpath ):
     logging.info("################ DREAMS Reciv Action: " + str(subpath) )
     logging.info("Reciv H : " + str(request.headers) )
@@ -299,6 +302,7 @@ def sunDreams( subpath ):
 # ==============================================================================
 @app.route('/ucc/documents/sign', methods=['GET', 'POST'])
 @csrf.exempt
+@auth.login_required
 def proccess_Sign():
     logging.info("Dashboard D : " + str(request.data) )
     request_data = request.get_json()
@@ -312,6 +316,7 @@ def proccess_Sign():
     return jsonify(dataTx)
 
 @app.route('/ucc/<path:rut>', methods=['GET'])
+@auth.login_required
 def ucc_test_page_html( rut ):
     uccMng = Ucc()
     data = uccMng.getInfo( str(rut) )
@@ -324,6 +329,7 @@ def ucc_test_page_html( rut ):
 
 @app.route('/ucc/document/contract/<path:name>', methods=['POST','GET'])
 @csrf.exempt
+@auth.login_required
 def showContract( name ):
     if ( request.method == 'POST' ) :
         strName = str(name)
@@ -343,6 +349,7 @@ def showContract( name ):
 # ==============================================================================
 @app.route('/page/cxp/change/<path:environment>', methods=['GET'])
 @csrf.exempt
+@auth.login_required
 def changeEnv( environment ):
     cxp = Sserpxelihc()
     old, success = cxp.saveEnv(str(environment))
@@ -359,6 +366,7 @@ def changeEnv( environment ):
 #===============================================================================
 @app.route('/page/cxp/<path:subpath>', methods=['POST','GET','PUT'])
 @csrf.exempt
+@auth.login_required
 def cxpPost( subpath ):
     cxp = Sserpxelihc()
     response, code = cxp.requestProcess(request, subpath)
@@ -370,6 +378,7 @@ def cxpPost( subpath ):
 # ==============================================================================
 @app.route('/page/memorize/states', methods=['GET'])
 @csrf.exempt
+@auth.login_required
 def getStateCard():
     logging.info('Solicito estados de tarjetas')
     memo = Memorize()
@@ -390,6 +399,7 @@ def getStateCard():
 # ==============================================================================
 @app.route('/page/memorize/state/save', methods=['POST', 'PUT'] )
 @csrf.exempt
+@auth.login_required
 def saveStateCard():
     logging.info('Guardo estado de tarjeta')
     memo = Memorize()
@@ -405,6 +415,7 @@ def saveStateCard():
 # ==============================================================================
 @app.route('/page/memorize/reset', methods=['GET'])
 @csrf.exempt
+@auth.login_required
 def reset():
     logging.info('Reset tarjetas')
     memo = Memorize()
@@ -440,7 +451,7 @@ def statusSystem() :
     return jsonify(response), code
 
 # ==============================================================================
-# Hook desde la API de Waza
+# Hook desde la API de Waza, no posee firma de nada y por lo tanto sin seguridad
 # ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
@@ -651,6 +662,7 @@ def images_logia( name ):
 # ==============================================================================
 @app.route('/page/cv/<path:subpath>', methods=['GET'])
 @csrf.exempt
+@auth.login_required
 def processCV( subpath ):
     data_cv = ''
     try :
@@ -669,61 +681,11 @@ def processCV( subpath ):
     return jsonify(data)
 
 # ==============================================================================
-# Notificacion en CV
-# ==============================================================================
-@app.route('/page/geo/search', methods=['POST'])
-@csrf.exempt
-def findGeoPos( ):
-    code = 409
-    data = {}
-    try :
-        logging.info("Reciv Header : " + str(request.headers) )
-        logging.info("Reciv Data   : " + str(request.data) )
-        request_data = request.get_json()
-        address = str(request_data['address'])
-        address = address.replace('pob', 'población')
-        address = address.replace('depto', 'departamento')
-        address = address.replace('block', 'edificio')
-        address = address.replace('.', ' ')
-        address = address.replace('  ', ' ')
-        address = address.replace(' ', '+')
-        logging.info("data_cipher: " + address )
-        url = 'https://nominatim.openstreetmap.org/search?q=' + address
-        #url += '&country=Chile'
-        url += '&format=jsonv2'
-        #url += '&polygon_geojson=1'
-        #url += '&addressdetails=1'
-        headers = {'Accept': 'application/json', 'Content-Type': 'application/json' }
-        m1 = time.monotonic_ns()
-        logging.info("URL : " + url )
-        resp = requests.get(url, headers = headers, timeout = 40)
-        diff = time.monotonic_ns() - m1
-        if( resp.status_code == 200 ) :
-            data_response = resp.json()
-            logging.info("Response: " + str( data_response ) )
-            data = {
-                'latitude'  : str( data_response[0]['lat'] ),
-                'longitude' : str( data_response[0]['lon'] ),
-                'name'      : str( data_response[0]['display_name'] ),
-                'message'   : 'Servicio Ejecutado Existosamente'
-            }
-            code = 200
-        else :
-            data_response = resp.json()
-            logging.info("Response: " + str( data_response ) )
-
-        logging.info("Time Response in " + str(diff/1000000000.0) + " sec." )
-
-    except Exception as e:
-        print("ERROR POST:", e)
-
-    return jsonify(data), code
-
-# ==============================================================================
 # Servicio para validar el recaptcha
 # ==============================================================================
 @app.route('/page/recaptcha', methods=['GET'])
 @csrf.exempt
+@auth.login_required
 def validaterecaptcha( ):
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
@@ -757,6 +719,7 @@ def validaterecaptcha( ):
 # ==============================================================================
 @app.route('/page/hcaptcha', methods=['GET','POST'])
 @csrf.exempt
+@auth.login_required
 def validatehcaptcha( ):
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
@@ -792,49 +755,24 @@ def validatehcaptcha( ):
 # ==============================================================================
 # Conexi'on a AWS en python para Acceder S3
 # ==============================================================================
-@app.route('/page/aws/s3/<path:action>', methods=['GET'])
+@app.route('/page/aws/<path:action>', methods=['GET'])
 @csrf.exempt
 @auth.login_required
-def s3Processor( action ):
+def awsProcessAction( action ):
     aws = AwsUtil()
-    data_response, http_status = aws.requestProcess( request, 's3/' + str(action) )
+    data_response, http_status = aws.requestProcess( request, str(action) )
     del aws
     return jsonify(data_response), http_status
-
 # ==============================================================================
-# Conexi'on a AWS en python para envio de SMS
+# Carga Archivo Shape de todos los paises de Sudamerica
 # ==============================================================================
-@app.route('/page/aws/sns/<path:action>', methods=['GET','POST'])
+@app.route('/page/geo/<path:subpath>', methods=['GET','POST','PUT'])
 @csrf.exempt
 @auth.login_required
-def smsProcessor( action ):
-    aws = AwsUtil()
-    data_response, http_status = aws.requestProcess( request, 'sns/' + str(action)  )
-    del aws
-    return jsonify(data_response), http_status
-
-# ==============================================================================
-# Conexi'on a AWS Pinpoint
-# ==============================================================================
-@app.route('/page/aws/pinpoint/<path:action>', methods=['GET','POST'])
-@csrf.exempt
-@auth.login_required
-def pinpointProcessor( action ):
-    aws = AwsUtil()
-    data_response, http_status = aws.requestProcess( request, 'pinpoint/' + str(action)  )
-    del aws
-    return jsonify(data_response), http_status
-
-# ==============================================================================
-# Conexi'on a AWS SES
-# ==============================================================================
-@app.route('/page/aws/ses/<path:action>', methods=['GET','POST'])
-@csrf.exempt
-@auth.login_required
-def sesProcessor( action ):
-    aws = AwsUtil()
-    data_response, http_status = aws.requestProcess( request, 'ses/' + str(action)  )
-    del aws
+def processGeoFeature( subpath ):
+    util = GeoPosUtil( root = str(ROOT_DIR) )
+    data_response, http_status = util.requestProcess( request, str(subpath) )
+    del util
     return jsonify(data_response), http_status
 
 # ===============================================================================

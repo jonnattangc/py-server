@@ -53,9 +53,11 @@ class AwsUtil() :
     # Procesa todos los request 
     # ==============================================================================
     def requestProcess(self, request, action ) :
-        logging.info("Reciv Header : " + str(request.headers) )
+        logging.info("############################ AWS Util ##############################" )
         logging.info("Reciv " + str(request.method) + " Acción: " + str(action) )
         logging.info("Reciv Data: " + str(request.data) )
+        logging.info("Reciv Header : " + str(request.headers) )
+        
         data = {'status':'Error ocurrido'}
         status = 409
         if action != None :   
@@ -85,6 +87,8 @@ class AwsUtil() :
                 otp = str(request_data['otp'])
                 if channel != None and request.method == 'POST' :
                     return self.validateOtp( channel, otp, )
+            elif str(action) == 'contents' :
+                return self.testAws()
             else :
                 data = {'status':'No Implementedo'}
                 status = 409
@@ -202,6 +206,19 @@ class AwsUtil() :
             retorno = { 'status': 'Salto una excepcion !' }
         diff = time.monotonic() - m1
         logging.info("[SES] Servicio Ejecutado en " + str(diff) + " msec." )
+        return retorno, status 
+    
+    def testAws( self ) :
+        retorno = {'valid': False }
+        status = 200
+        m1 = time.monotonic()
+        try :
+            retorno = {'valid': self.s3 != None and self.pinpoint != None and self.ses != None and self.sns != None } 
+        except Exception as e:
+            print("[STATUS] ERROR AWS:", e)
+            status = 500
+        diff = time.monotonic() - m1
+        logging.info("[STATUS] Servicio Ejecutado en " + str(diff) + " msec." )
         return retorno, status 
     # ==============================================================================
     # Valida la OTP
