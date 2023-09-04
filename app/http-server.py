@@ -431,7 +431,6 @@ def reset():
 # ==============================================================================
 @app.route('/page/waza/<path:subpath>', methods=['POST'])
 @auth.login_required
-@csrf.exempt
 def waza( subpath ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, subpath)
@@ -443,7 +442,6 @@ def waza( subpath ):
 # ==============================================================================
 @app.route('/page/status', methods=['GET'])
 @auth.login_required
-@csrf.exempt
 def statusSystem() :
     checker = Checker()
     response, code = checker.getStatusPages()
@@ -454,7 +452,6 @@ def statusSystem() :
 # Hook desde la API de Waza, no posee firma de nada y por lo tanto sin seguridad
 # ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
-@csrf.exempt
 def wazasp( ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, None)
@@ -465,7 +462,7 @@ def wazasp( ):
 # Attlasian
 # ==============================================================================
 @app.route('/page/attlasian/<path:subpath>', methods=['POST','GET','PUT'])
-@csrf.exempt
+@auth.login_required
 def attlasian( subpath ):
     util = UtilAttlasian()
     msg, code = util.requestProcess(request, subpath)
@@ -476,7 +473,6 @@ def attlasian( subpath ):
 # Realiza login en la pagina de la Gran Logia usando para ello scraper
 # ==============================================================================
 @app.route('/logia/usergl/login', methods=['POST'])
-@csrf.exempt
 def loginGL():
     #logging.info("Reciv Header : " + str(request.headers) )
     #logging.info("Reciv Data   : " + str(request.data) )
