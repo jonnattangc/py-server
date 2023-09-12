@@ -10,8 +10,9 @@ try:
     from flask_cors import CORS
     from flask_wtf.csrf import CSRFProtect
     from flask_httpauth import HTTPBasicAuth
-    from flask_login import ( LoginManager, UserMixin, current_user, login_required, login_user )
+    from flask_login import LoginManager, UserMixin, current_user, login_required, login_user
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
+    # from werkzeug import secure_filename
     # Clases personales
     from utils import Banks, Cipher
     from coordinator import Coordinator
@@ -68,8 +69,8 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
-# cors = CORS(app, resources={r"/page/*": {"origins": ["dev.jonnattan.com"]}})
+# cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
+cors = CORS(app, resources={r"/page/*": {"origins": ["dev.jonnattan.com"]}})
 # ===============================================================================
 # variables globales
 # ===============================================================================
@@ -752,11 +753,11 @@ def validatehcaptcha( ):
 # ==============================================================================
 # Conexi'on a AWS en python para Acceder S3
 # ==============================================================================
-@app.route('/page/aws/<path:action>', methods=['GET'])
+@app.route('/page/aws/<path:action>', methods=['GET','POST'])
 @csrf.exempt
 @auth.login_required
 def awsProcessAction( action ):
-    aws = AwsUtil()
+    aws = AwsUtil(  root = str(ROOT_DIR)  )
     data_response, http_status = aws.requestProcess( request, str(action) )
     del aws
     return jsonify(data_response), http_status
@@ -771,7 +772,6 @@ def processGeoFeature( subpath ):
     data_response, http_status = util.requestProcess( request, str(subpath) )
     del util
     return jsonify(data_response), http_status
-
 # ===============================================================================
 # Favicon
 # ===============================================================================

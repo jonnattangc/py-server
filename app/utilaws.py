@@ -4,7 +4,12 @@ try:
     import os
     import time
     import boto3
+    import base64
+    import uuid
     from otp import Otp
+    from werkzeug.utils import secure_filename
+    from botocore.exceptions import ClientError
+
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -15,22 +20,26 @@ class AwsUtil() :
     access_key = os.environ.get('AWS_ACCESS_KEY','None')
     secret_key = os.environ.get('AWS_SECRET_KEY','None')
     app_id = os.environ.get('AWS_PINPOINT_APP_ID','None')
+    s3_resource = None
     s3 = None
     sns = None
     pinpoint = None 
     ses = None
+    root = '.'
 
     # ==============================================================================
     # Constructor
     # ==============================================================================
-    def __init__(self, region='us-east-1') :
+    def __init__(self, root = '.', region='us-east-1') :
         self.url_base = self.url_base.replace('__AWS_REGION__', region)
         try :
+            self.root = str(root)
             self.sns = boto3.client('sns', aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key, region_name=region)
             self.pinpoint = boto3.client('pinpoint', aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key, region_name=region)
             self.ses = boto3.client('ses', aws_access_key_id=self.access_key,aws_secret_access_key=self.secret_key, region_name=region)
             session = boto3.Session(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
-            self.s3 = session.resource('s3')
+            self.s3_resource = session.resource('s3')
+            self.s3 = boto3.client('s3')
             logging.info("Session Available Resources: " + str(session.get_available_resources()) )
         except Exception as e:
             print("[__init__] ERROR AWS:", e)
@@ -40,11 +49,11 @@ class AwsUtil() :
     # ==============================================================================
     def __del__(self):
         self.url_base = 'https://s3.__AWS_REGION__.amazonaws.com/'
-        del self.s3
+        del self.s3_resource
         del self.sns
         del self.pinpoint
         del self.ses
-        self.s3 = None
+        self.s3_resource = None
         self.sns = None
         self.pinpoint = None
         self.ses = None
@@ -89,10 +98,55 @@ class AwsUtil() :
                     return self.validateOtp( channel, otp, )
             elif str(action) == 'contents' :
                 return self.testAws()
+            elif str(action) == 'file/upload' :
+                return self.s3Uploader( request )
             else :
                 data = {'status':'No Implementedo'}
                 status = 409
         return data, status
+    
+    def s3Uploader( self, request ) :
+        data = {'ref': 'Servicio Ejecutado exitosamente'}
+        code = 200
+        m1 = time.monotonic_ns()
+        try :
+            request_data = request.get_json()
+            name_file = str(request_data['name'])
+            name_file = 'photos/' + str(uuid.uuid4()) + '-' + name_file
+
+            data = str(request_data['data'])
+            data = data.replace('data:image/png;base64,','')
+
+            name = 'test.png'
+            file_path = os.path.join(self.root, 'static')
+            file_path = os.path.join(file_path, 'images')
+            file_path = os.path.join(file_path, str(name))
+
+            file = open(file_path, 'wb')
+            file.write( base64.b64decode((data) ))
+            file.close()
+
+            logging.info('[S3] Archivo a subir: ' + str(file_path))
+            logging.info('[S3] Nombre: ' + str(name_file))
+            s3_bucket = self.s3_resource.Bucket(name='jonnattan.com-storage')
+            s3_bucket.upload_file( Filename=file_path, Key=name_file )
+            data = { 
+                'url': str(self.url_base) + 'jonnattan.com-storage/' + str(name_file),
+                'msg': 'Servicio ejecutado exitosamente',
+                'code': 0
+            }
+
+
+        except Exception as e:
+            print("[S3] ERROR AWS:", e)
+            code = 403
+            data = { 'ref': 'Error: ' + str(e) }
+
+        diff = time.monotonic_ns() - m1
+        logging.info("[S3] Servicio Ejecutado en " + str(diff) + " nsec." )
+        return data, code 
+
+
     # ==============================================================================
     # Envia mail a trav'es de SES de AWS
     # ==============================================================================
@@ -213,7 +267,7 @@ class AwsUtil() :
         status = 200
         m1 = time.monotonic()
         try :
-            retorno = {'valid': self.s3 != None and self.pinpoint != None and self.ses != None and self.sns != None } 
+            retorno = {'valid': self.s3_resource != None and self.pinpoint != None and self.ses != None and self.sns != None } 
         except Exception as e:
             print("[STATUS] ERROR AWS:", e)
             status = 500
@@ -306,9 +360,9 @@ class AwsUtil() :
         elements = []
         m1 = time.monotonic_ns()
         try :
-            if self.s3 != None :
-                logging.info('[Photos] s3: ' + str(self.s3) )
-                for bucket in self.s3.buckets.all():
+            if self.s3_resource != None :
+                logging.info('[Photos] s3_resource: ' + str(self.s3_resource) )
+                for bucket in self.s3_resource.buckets.all():
                     logging.info('[Photos] Bucket: ' + bucket.name)
                     #contents = s3.Bucket(bucket.name)
                     for obj in bucket.objects.filter(Prefix='photos/') :
@@ -328,11 +382,11 @@ class AwsUtil() :
         elements = []
         m1 = time.monotonic_ns()
         try :
-            if self.s3 != None :
-                logging.info('[Photos] s3: ' + str(self.s3) )
-                for bucket in self.s3.buckets.all():
+            if self.s3_resource != None :
+                logging.info('[Photos] s3_resource: ' + str(self.s3_resource) )
+                for bucket in self.s3_resource.buckets.all():
                     logging.info('[Docs] Bucket: ' + bucket.name)
-                    #contents = s3.Bucket(bucket.name)
+                    #contents = s3_resource.Bucket(bucket.name)
                     for obj in bucket.objects.filter(Prefix='docs/') :
                         logging.info('[Docs] Bucket: ' + obj.bucket_name + ' Key: ' + obj.key)
                         elements.append({'url' : self.url_base + obj.bucket_name + '/' + obj.key })

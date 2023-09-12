@@ -6,6 +6,7 @@ __pycache__/
 **/*.pdf
 **/Sudamérica*.*
 .env
+.aws_credentials
 # C extensions
 *.so
 
