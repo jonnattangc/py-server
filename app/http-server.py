@@ -484,6 +484,8 @@ def loginGL():
     message = "No autorizado"
     code  = 401
     user = ''
+    name = ''
+    grade = 0,
     apyKey = request.headers.get('API-Key')
     if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
@@ -500,11 +502,13 @@ def loginGL():
                 passwd = str(datos[1]).strip()
                 if user != '' and passwd != '' :
                     gl = GranLogia()
-                    message, code  = gl.loginSystem( user, passwd )
+                    name, grade, message, code  = gl.loginSystem( user, passwd )
                     del gl
     data = {
         'message' : str(message),
-        'user' : str(user)
+        'user' : str(user),
+        'grade' : str(grade),
+        'name' : str(name)
     }
     return jsonify(data), code
 
@@ -636,6 +640,7 @@ def show_pdf(subpath):
             cipher = Cipher()
             data_bytes = cipher.aes_decrypt(str(paths[1]).strip())
             data_clear = str(data_bytes.decode('UTF-8'))
+            logging.info("Find File: " + str(data_clear))
             del cipher
             return send_from_directory(file_path, data_clear)
     return jsonify({'message':'Acceso no autorizado'}), 401

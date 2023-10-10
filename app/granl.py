@@ -181,6 +181,8 @@ class GranLogia() :
         logging.info("Rescato password para usuario: " + str(username) )
         passwordBd = None
         userResp = None
+        grade = 0
+        name = ''
         try :
             if self.db != None :
                 cursor = self.db.cursor()
@@ -193,6 +195,8 @@ class GranLogia() :
                 for row in results:
                     passwordBd = str(row['password'])
                     userBd = str(row['username'])
+                    name = str(row['name'])
+                    grade = int(str(row['grade']))
                 # guardo lo que se necesita y solo si existen ambos valores
                 if userBd != None and passwordBd != None :
                     check = check_password_hash(passwordBd, password ) 
@@ -201,37 +205,44 @@ class GranLogia() :
                         userResp = userBd.strip()
                     else :
                         logging.info("Ckeck: " + str(check)+ " Error validando passwd de " + str(username) ) 
+                        grade = 0
+                        name = ''
                 else :
                   logging.info('user y/o password no encontrado')  
+                  grade = 0
+                  name = ''
         except Exception as e:
             print("ERROR BD:", e)
-        return userResp
+        return userResp, grade, name
 
 
     def loginSystem(self, username, password) :
         logging.info("Verifico Usuario: " + str(username) )
         message = "Ok"
         code = 200
-        user = self.verifiyUserPass( username, password )
+        user, saved_grade, name_saved = self.verifiyUserPass( username, password )
         if user == None :
-            grade, name = self.login( username, password)
-            logging.info("Nombre: " + str(name) )
+            grade, name_saved = self.login( username, password)
+            logging.info("Nombre: " + str(name_saved) )
             if grade > 0 and grade < 4 :
                 try :
                     if self.db != None :
                         cursor = self.db.cursor()
-                        sql = """INSERT INTO secure (date_save, username, password, grade) VALUES(%s, %s, %s, %s)"""
+                        sql = """INSERT INTO secure (date_save, username, password, grade, name ) VALUES(%s, %s, %s, %s)"""
                         now = datetime.now()
-                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade ))
+                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
                         self.db.commit()
                         message = 'Usuario Creado'
                         code = 201
+                        saved_grade = int(grade)
                 except Exception as e:
                     print("ERROR BD:", e)
                     self.db.rollback()
                     message = "Error en BD"
                     code = 500
+                    saved_grade = 0
+                    name_saved = ''
             else :
                 message = "El usuario es inválido"
                 code = 409
-        return message, code 
+        return name_saved, saved_grade, message, code 
