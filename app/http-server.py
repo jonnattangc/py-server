@@ -58,6 +58,7 @@ logger = logging.getLogger('HTTP')
 
 SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
 SECRET_CSRF = os.environ.get('SECRET_KEY_CSRF','KEY-CSRF-ACA-DEBE-IR')
+LOGIA_API_KEY = os.environ.get('LOGIA_API_KEY','None')
 
 app = Flask(__name__)
 app.config.update( DEBUG=False, SECRET_KEY = str(SECRET_CSRF), )
@@ -432,6 +433,7 @@ def reset():
 # ==============================================================================
 @app.route('/page/waza/<path:subpath>', methods=['POST'])
 @auth.login_required
+@csrf.exempt
 def waza( subpath ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, subpath)
@@ -453,6 +455,7 @@ def statusSystem() :
 # Hook desde la API de Waza, no posee firma de nada y por lo tanto sin seguridad
 # ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
+@csrf.exempt
 def wazasp( ):
     waza = UtilWaza()
     msg, code = waza.requestProcess(request, None)
@@ -482,7 +485,7 @@ def loginGL():
     code  = 401
     user = ''
     apyKey = request.headers.get('API-Key')
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -587,7 +590,7 @@ def access_docs_logia():
     cipher = Cipher()
     data = {}
     name_doc = ''
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + str(data_cipher) )

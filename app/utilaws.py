@@ -20,6 +20,7 @@ class AwsUtil() :
     access_key = os.environ.get('AWS_ACCESS_KEY','None')
     secret_key = os.environ.get('AWS_SECRET_KEY','None')
     app_id = os.environ.get('AWS_PINPOINT_APP_ID','None')
+    bucket_name = os.environ.get('AWS_S3_BUCKET','None')
     s3_resource = None
     s3 = None
     sns = None
@@ -128,10 +129,11 @@ class AwsUtil() :
 
             logging.info('[S3] Archivo a subir: ' + str(file_path))
             logging.info('[S3] Nombre: ' + str(name_file))
-            s3_bucket = self.s3_resource.Bucket(name='jonnattan.com-storage')
+            
+            s3_bucket = self.s3_resource.Bucket(name=self.bucket_name)
             s3_bucket.upload_file( Filename=file_path, Key=name_file )
             data = { 
-                'url': str(self.url_base) + 'jonnattan.com-storage/' + str(name_file),
+                'url': str(self.url_base) + str(self.bucket_name) + '/' + str(name_file),
                 'msg': 'Servicio ejecutado exitosamente',
                 'code': 0
             }
