@@ -60,7 +60,7 @@ class GranLogia() :
             if self.hub != None :
                 logging.info("Remote HUB: " + self.hub)
                 self.driver = webdriver.Remote(self.hub, desired_capabilities=webdriver.DesiredCapabilities.CHROME)
-                self.wait = WebDriverWait(self.driver, 60)  # 30 segundos
+                self.wait = WebDriverWait(self.driver, 30)  # 30 segundos
         except Exception as e:
             self.driver = None
             logging.warning("ERROR :", e) 
@@ -76,31 +76,38 @@ class GranLogia() :
         browser = self.get_driver()
         name = 'Desconocido'
         try:
-            logging.info("Loging...")
-            browser.get('https://www.granlogiadechile.cl/index.php/login-user')
-            rut_user = browser.find_element(By.ID, 'username')
+            logging.info("Login..")
+            browser.get('https://www.mimasoneria.cl/web/login')
+            rut_user = browser.find_element(By.ID, 'login')
             rut_user.send_keys(username)
             pswd = browser.find_element(By.ID,'password')
             pswd.send_keys(password)
-            element = browser.find_element(By.XPATH, "//div[@id='sp-component']/div/div[2]/div/div/form/div[4]/button")
-            logging.info("Se presiona btn entrar")
+            element = browser.find_element(By.XPATH, "//div[3]/button")
+            logging.info("Se presiona boton entrar")
             element.click()
         except Exception as e:
             try:
                 browser.save_screenshot(os.path.join("./", "login_error.png"))
-                logging.info('ERROR: ', e)
+                print('ERROR: ', e)
                 grade = 0
             except:
                 pass
         try:
             logging.info("Verifico si entre...")
-            browser.execute_script("window.scrollTo(0, 0);")
-            element = self.wait.until(ec.visibility_of_element_located((By.XPATH, "//div[@id='btl']/div/span")))
+            browser.save_screenshot(os.path.join("./", "paso 1.png"))
+            # browser.execute_script("window.scrollTo(0, 0);")
+            element = self.wait.until(ec.visibility_of_element_located((By.XPATH, "//div[@id='custom_nav_chico']/nav/ul[2]/li/a/b/span")))
             name = str(element.text.strip())
-            logging.info("Loging [Ok]")
+            logging.info("Loging [Ok], Nombre: " + str(name) )
+            oneandtwo =  name.split(' ')
+            name = str(oneandtwo[0]) + ' ' + str(oneandtwo[1])
             grade = 1
+            # me dirijo a la biblioteca
+            element = self.wait.until(ec.visibility_of_element_located((By.XPATH, "//div[@id='wrap']/div[2]/div[2]/div[3]/a/div/p")))
+            element.click()
+
         except Exception as e:
-            logging.info('ERROR, no se pudo hacer login ')
+            print("ERROR, no se pudo hacer login ", e)
             grade = 0
             try:
                 browser.save_screenshot(os.path.join("./", "login_error.png"))
@@ -109,20 +116,21 @@ class GranLogia() :
 
         if grade == 1 :
             try :
-                element = browser.find_element(By.XPATH, "//a[contains(text(),'Compañeros')]")
+                element = browser.find_element(By.XPATH, "//img[@alt='Biblioteca Compañeros']")
                 grade = 2
                 logging.info("Se detecta que es grado 2")
             except Exception as e:
-                logging.info('No se encuentra indicios de ser compañero')
+                print('No se encuentra indicios de ser compañero: ', e)
 
         if grade == 2 :
             try :
-                element = browser.find_element(By.XPATH, "//a[contains(text(),'Maestros')]")
+                element = browser.find_element(By.XPATH, "//img[@alt='Biblioteca Maestros']")
                 grade = 3
                 logging.info("Se detecta que es grado 3")
             except Exception as e:
-                logging.info('No se encuentra indicios de ser maestro')
+                print('No se encuentra indicios de ser maestro: ', e)
 
+        logging.info('El QH ' + str(name) + ' es del grado: ' + str(grade) )
         return grade, name
 
     #================================================================================================
@@ -222,13 +230,13 @@ class GranLogia() :
         code = 200
         user, saved_grade, name_saved = self.verifiyUserPass( username, password )
         if user == None :
-            grade, name_saved = self.login( username, password)
-            logging.info("Nombre: " + str(name_saved) )
+            grade, name_saved = self.login( username, password )
+            logging.info("Nombre: " + str(name_saved) + "Grade: " + str(grade) )
             if grade > 0 and grade < 4 :
                 try :
                     if self.db != None :
                         cursor = self.db.cursor()
-                        sql = """INSERT INTO secure (date_save, username, password, grade, name ) VALUES(%s, %s, %s, %s)"""
+                        sql = """INSERT INTO secure (date_save, username, password, grade, name ) VALUES(%s, %s, %s, %s, %s)"""
                         now = datetime.now()
                         cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
                         self.db.commit()
