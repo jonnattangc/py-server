@@ -24,7 +24,7 @@ class Coordinator() :
     host = os.environ.get('HOST_BD','None')
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
-    bearer = os.environ.get('BEARER_MIDDLEWARE','None')
+    token_bearer = os.environ.get('BEARER_MIDDLEWARE','None')
     database = 'deposits'
     # URL notificacion a middleware IONIX
     url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/' + database
@@ -94,8 +94,8 @@ class Coordinator() :
         logging.info("Request to Middleware: " + str(request_tx) )
         response = {}
         try :
-            headersTx = {'Content-Type': 'application/json','Authorization': 'Bearer ' + str(self.bearer) }
-            response = requests.post(self.url_notification, json = request_tx, headers = headersTx, timeout = 20)
+            headers_tx = {'Content-Type': 'application/json','Authorization': 'Bearer ' + str(self.token_bearer) }
+            response = requests.post(self.url_notification, json = request_tx, headers = headers_tx, timeout = 20)
         except Exception as e:
             print("ERROR POST:", e)
         if response.status_code != None and response.status_code == 200 :
