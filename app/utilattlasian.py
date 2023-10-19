@@ -12,10 +12,8 @@ try:
 
     from atlassian import Jira
     from atlassian import Confluence
-    from atlassian import Crowd
-    from atlassian import Bitbucket
     from atlassian import ServiceDesk
-    from atlassian import Xray
+
 
 
 except ImportError:
@@ -77,58 +75,74 @@ class UtilAttlasian() :
             print("ERROR BD:", e)
             self.db.rollback()
 
+    # Procesa la llamada a cualqueri servicio que tenga que ver con attlasian
     def requestProcess(self, request, subpath ) :
             logging.info('########################## ' + str(request.method) + ' ###################################')
             logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Contex: " + str(subpath) )
             logging.info("Reciv Data: " + str(request.data) )
+
             # valores por defecto
-            data_response = {'statusCode': 500, 'statusDescription': 'Error en la ejecucion del servicio' }
-            errorCode = 200
+            response = {'statusCode': 404, 'statusDescription': 'Servicio no exite' }
+            errorCode = 404
             request_data = request.get_json()
-            try :
-                m1 = time.monotonic()
-                cfnc = self.confluence
-                space_name = str(request_data['space'])
-                detail = cfnc.get_all_spaces(start=0, limit=500, expand=None)
-                pages_info = []
+            m1 = time.monotonic()
 
-                for page in detail['results'] :
-                    if str(page['type']) == 'global' : 
-                        if str(page['key']) == space_name :
+            if subpath == None :
+                logging.info('Sin path adicional')
+            elif subpath.find('info') >= 0 :
+                try :
+                    name_space = ''
+                    key_space = ''
+                    title_space = ''
+                    description_space = ''
+                    id_space = ''
 
-                            logging.info('Page: ' + str(page['name']) + ' Id: ' +  str(page['id']) + ' Key: ' +  str(page['key'])  )
-                            description = cfnc.get_space(str(page['key']), expand='description.plain,homepage')
-                            
-                            page_id = str(description['homepage']['id'])
-                            logging.info('ID Homepage[' + page_id + ']')
+                    cfnc = self.confluence
+                    key_space = str(request_data['space'])
+                    detail = cfnc.get_all_spaces(start=0, limit=500, expand=None)
+                    pages_info = []
 
-                            childs = cfnc.get_page_child_by_type(page_id, type='page', start=None, limit=None, expand=None)
-                            
-                            logging.info('Child: ' + str(childs) )
-                            # properties = cfnc.get_page_properties(page['id'])
+                    for page in detail['results'] :
+                        if str(page['type']) == 'global' : 
+                            if str(page['key']) == key_space :
+                                name_space = str(page['name'])
+                                id_space = str(page['id'])
+                                description = cfnc.get_space(key_space, expand='description.plain,homepage')
+                                page_id = str(description['homepage']['id'])
+                                logging.info('ID Homepage[' + page_id + ']')
+                                description_space = str(description['description']['plain']['value'])
+                                logging.info('Descripción Espacio: [' + description_space + ']')
 
-                            properties = cfnc.get_page_by_id(page_id, status='current', version=None)
-                            logging.info('Title: ' + str(properties['title']) )
+                                properties = cfnc.get_page_by_id(page_id, status='current', version=None)
+                                title_space = str(properties['title'])
+                                logging.info('Title: ' + title_space )
+                                base_url = str(properties['_links']['base'])
+                                logging.info('Base URL: ' + base_url )
 
-                            pages_info.append({
-                                'page': page, 
-                                'description': description, 
-                                'properties': properties
-                            })
-                
-                data_response = {
-                    'pages' : pages_info,
-                    'len': len(pages_info)
-                }
+                                sub_pages = cfnc.get_all_pages_from_space(key_space, start=None, limit=None, status = None, expand = None, content_type = 'page')
+                                for sub_page in sub_pages :
+                                    pages_info.append({
+                                        'title': str(sub_page['title']), 
+                                        'id_page': str(sub_page['id']),
+                                        'url': str(base_url) + str(sub_page['_links']['webui']) 
+                                    })
+                    
+                    response = {
+                            'title': title_space,
+                            'name': name_space,
+                            'identify': id_space,
+                            'key': key_space,
+                            'description': description_space,
+                            'pages' : pages_info
+                    }
+                    errorCode = 200
+                except Exception as e:
+                    print("ERROR POST:", e)
+            else :
+                logging.info('No hay accion para :' + str(subpath) )
 
-                if subpath == None :
-                    logging.info('Sin path adicional')
-                else :
-                    logging.info('Path adicional:' + str(subpath) )
-
-                diff = time.monotonic() - m1;
-                logging.info("Time Response in " + str(diff) + " sec." )
-            except Exception as e:
-                print("ERROR POST:", e)
-            return jsonify(data_response), errorCode
+            diff = time.monotonic() - m1;
+            logging.info("Time Response in " + str(diff) + " sec." )
+            
+            return jsonify(response), errorCode
