@@ -1,4 +1,4 @@
-FROM python:3.12.0b1-slim
+FROM python:3.13-rc-slim
 
 LABEL VERSION=1.1
 LABEL DESCRIPCION="Python Server HTTP V2"
