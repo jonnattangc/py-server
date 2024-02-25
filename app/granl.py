@@ -200,11 +200,12 @@ class GranLogia() :
                 passwordBd = None
                 userBd = None
                 # saco los datos de la BD
-                for row in results:
+                for row in results :
                     passwordBd = str(row['password'])
                     userBd = str(row['username'])
                     name = str(row['name'])
                     grade = int(str(row['grade']))
+                    logging.info("Usuario " + str(name) + " encontrado")
                 # guardo lo que se necesita y solo si existen ambos valores
                 if userBd != None and passwordBd != None :
                     check = check_password_hash(passwordBd, password ) 
