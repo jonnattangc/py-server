@@ -85,7 +85,7 @@ class Otp() :
                     otp = str(row['otp']).strip()
                     ref = str(row['ref']).strip()
                     exp = str(row['expirate_at']).strip()
-
+                cursor.close()
                 date_exp = datetime.strptime(exp,"%Y-%m-%d %H:%M:%S")
                 now = datetime.now()
                 otp_expirate = now > date_exp
