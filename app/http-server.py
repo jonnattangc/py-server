@@ -780,6 +780,16 @@ def processGeoFeature( subpath ):
     data_response, http_status = util.requestProcess( request, str(subpath) )
     del util
     return jsonify(data_response), http_status
+
+# ==============================================================================
+# Archivos PDF guardados
+# ==============================================================================
+@app.route('/page/docs/<path:doc>', methods=['GET'])
+def pdfs_page( doc ):
+    file_path = os.path.join(ROOT_DIR, 'static')
+    file_path = os.path.join(file_path, 'docs')
+    return send_from_directory(file_path, str(doc) )
+
 # ===============================================================================
 # Favicon
 # ===============================================================================
