@@ -1,4 +1,4 @@
-FROM python:3.13-rc-slim
+FROM python:3.11.8-slim
 
 LABEL VERSION=1.1
 LABEL DESCRIPCION="Python Server HTTP V2"
@@ -48,5 +48,5 @@ EXPOSE 8085
 
 CMD [ "python", "http-server.py", "8085"]
 # python3 http-server.py 8085
-# CMD [ "/bin/sh", "./run.sh" ]
+# CMD [ "tail", "-f", "/home/jonnattan/requirements.txt" ]
 # pip freeze > requirements.txt

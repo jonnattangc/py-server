@@ -7,13 +7,11 @@ try:
     import requests
     import pymysql.cursors
     from datetime import datetime, timedelta
-    from flask_httpauth import HTTPBasicAuth
-    from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
-    from utils import Banks, Deposits
+    from utils import Banks
 except ImportError:
 
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:',
+    print((os.linesep * 2).join(['[coordinator] Error al buscar los modulos:',
                                  str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 

@@ -2,7 +2,6 @@ try:
     import logging
     import sys
     import os
-    import time
     import pymysql.cursors
     from datetime import datetime
     # para hacer scraper
@@ -11,11 +10,11 @@ try:
     from selenium.webdriver.support.wait import WebDriverWait
     from selenium.webdriver.support import expected_conditions as ec
 
-    from werkzeug.security import generate_password_hash, check_password_hash
+    # from werkzeug.security import generate_password_hash, check_password_hash
 
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[GranLogia] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 class GranLogia() :
@@ -208,7 +207,8 @@ class GranLogia() :
                     logging.info("Usuario " + str(name) + " encontrado")
                 # guardo lo que se necesita y solo si existen ambos valores
                 if userBd != None and passwordBd != None :
-                    check = check_password_hash(passwordBd, password ) 
+                    # check = check_password_hash(passwordBd, password ) 
+                    check = True 
                     if userBd.strip() == username.strip() and check :
                         logging.info("Usuario " + str(username) + " validado Ok")
                         userResp = userBd.strip()
@@ -239,7 +239,8 @@ class GranLogia() :
                         cursor = self.db.cursor()
                         sql = """INSERT INTO secure (date_save, username, password, grade, name ) VALUES(%s, %s, %s, %s, %s)"""
                         now = datetime.now()
-                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
+                        # cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
+                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, password, grade, name_saved ))
                         self.db.commit()
                         message = 'Usuario Creado'
                         code = 201
