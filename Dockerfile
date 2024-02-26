@@ -39,7 +39,7 @@ COPY ./requirements.txt /home/jonnattan/requirements.txt
 RUN cd /home/jonnattan && \
     mkdir -p /home/jonnattan/.local/bin && \
     export PATH=$PATH:/home/jonnattan/.local/bin && \
-    pip install --upgrade pip
+    pip install --upgrade pip && \
     pip install -r requirements.txt
 
 WORKDIR /home/jonnattan/app
