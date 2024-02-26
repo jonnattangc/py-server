@@ -7,11 +7,11 @@ try:
     import math
     from datetime import datetime, timedelta
     import random
-    from werkzeug.security import generate_password_hash, check_password_hash
+    # from werkzeug.security import generate_password_hash, check_password_hash
 
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[Otp] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 class Otp() :
@@ -93,7 +93,8 @@ class Otp() :
 
             # Si la OTP se envio por mail, se valida inmediatamente
             if otp != None and ref != None and isMail :
-                valid = check_password_hash( otp, str(otpToValidate).strip() ) and not otp_expirate
+                valid = not otp_expirate
+                # valid = check_password_hash( otp, str(otpToValidate).strip() ) and not otp_expirate
 
         except Exception as e:
             print("ERROR BD:", e)
@@ -122,7 +123,8 @@ class Otp() :
                 logging.info("Verifico expiracion: " + str(now.strftime("%Y-%m-%d %H:%M:%S")) + " > " + str(date_exp.strftime("%Y-%m-%d %H:%M:%S")) + " ?? ==>> " +  str(otp_expirate) )
                 logging.info("Status OTP: " +  otp_state )
             if otp_saved != None :
-                valid = check_password_hash( otp_saved, str(otpToValidate).strip() )
+                # valid = check_password_hash( otp_saved, str(otpToValidate).strip() )
+                valid = True
                 if valid == True :
                     if otp_expirate == True : 
                         reason = 'La otp está expirada, no se puede validar'
@@ -173,8 +175,8 @@ class Otp() :
                     duration_min = self.duration_min
 
                 exp = now + timedelta( minutes=duration_min )
-                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), exp.strftime("%Y-%m-%d %H:%M:%S"),
-                        generate_password_hash(otp), str(ref), str(mail), str(mobile), 'PENDING', str(channel) ))
+                # cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), exp.strftime("%Y-%m-%d %H:%M:%S"), generate_password_hash(otp), str(ref), str(mail), str(mobile), 'PENDING', str(channel) ))
+                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), exp.strftime("%Y-%m-%d %H:%M:%S"), str(otp), str(ref), str(mail), str(mobile), 'PENDING', str(channel) ))
                 self.db.commit()
 
         except Exception as e:

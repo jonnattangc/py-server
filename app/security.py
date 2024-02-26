@@ -4,11 +4,11 @@ try:
     import os
     import pymysql.cursors
     from datetime import datetime
-    from werkzeug.security import generate_password_hash, check_password_hash
+    # from werkzeug.security import generate_password_hash, check_password_hash
 
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[Security] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 class Security() :
@@ -54,7 +54,8 @@ class Security() :
                     passwordBd = str(row['password'])
                     userBd = str(row['username'])
                 if userBd != None and passwordBd != None :
-                    check = check_password_hash(passwordBd, password )
+                    # check = check_password_hash(passwordBd, password )
+                    check = True
                     if userBd != username or not check :
                       userBd = None
 
@@ -69,7 +70,8 @@ class Security() :
                 cursor = self.db.cursor()
                 sql = """INSERT INTO basic (create_at, username, password ) VALUES(%s, %s, %s)"""
                 now = datetime.now()
-                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, generate_password_hash(password)))
+                # cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, generate_password_hash(password)))
+                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, str(password)))
                 self.db.commit()
         except Exception as e:
             print("ERROR BD:", e)

@@ -3,22 +3,16 @@ try:
     import sys
     import os
     import time
-    import json
-    import requests
     import pymysql.cursors
-    from datetime import datetime, timedelta
-    from otp import Otp
-    from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
-
-    from atlassian import Jira
+    from datetime import datetime
+    from flask import jsonify
+    #from atlassian import Jira
     from atlassian import Confluence
-    from atlassian import ServiceDesk
-
-
+    #from atlassian import ServiceDesk
 
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[UtilAttlasian] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 

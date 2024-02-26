@@ -6,13 +6,13 @@ try:
     import json
     import requests
     import pymysql.cursors
-    from datetime import datetime, timedelta
+    from datetime import datetime
     from otp import Otp
     from utilchatbot import UtilChatbot
-    from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
+    from flask import jsonify
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[UtilWaza] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 

@@ -7,12 +7,10 @@ try:
     import base64
     import uuid
     from otp import Otp
-    from werkzeug.utils import secure_filename
-    from botocore.exceptions import ClientError
 
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[AwsUtil] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 class AwsUtil() :
