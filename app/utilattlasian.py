@@ -6,9 +6,7 @@ try:
     import pymysql.cursors
     from datetime import datetime
     from flask import jsonify
-    #from atlassian import Jira
     from atlassian import Confluence
-    #from atlassian import ServiceDesk
 
 except ImportError:
     logging.error(ImportError)
