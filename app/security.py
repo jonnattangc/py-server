@@ -4,7 +4,7 @@ try:
     import os
     import pymysql.cursors
     from datetime import datetime
-    # from werkzeug.security import generate_password_hash, check_password_hash
+    from werkzeug.security import generate_password_hash, check_password_hash
 
 except ImportError:
     logging.error(ImportError)
@@ -54,8 +54,7 @@ class Security() :
                     passwordBd = str(row['password'])
                     userBd = str(row['username'])
                 if userBd != None and passwordBd != None :
-                    # check = check_password_hash(passwordBd, password )
-                    check = True
+                    check = check_password_hash(passwordBd, password )
                     if userBd != username or not check :
                       userBd = None
 
@@ -70,8 +69,7 @@ class Security() :
                 cursor = self.db.cursor()
                 sql = """INSERT INTO basic (create_at, username, password ) VALUES(%s, %s, %s)"""
                 now = datetime.now()
-                # cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, generate_password_hash(password)))
-                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, str(password)))
+                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, generate_password_hash(password)))
                 self.db.commit()
         except Exception as e:
             print("ERROR BD:", e)
