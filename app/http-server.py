@@ -239,7 +239,7 @@ def sunDreams( subpath ):
         code = str(request_data['code'])
 
         request_tx = {
-                'username': 'TT-Pay: Notificación de depósito',
+                'username': 'OJO: Notificación de depósito',
                 'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
                 'attachments': [
                     {
@@ -299,7 +299,7 @@ def sunDreams( subpath ):
     return jsonify(dataTx)
 
 # ==============================================================================
-# Tests CCU Relacionados con los contratos y la generaci'on de estos.
+# Tests UCC Relacionados con los contratos y la generaci'on de estos.
 # ==============================================================================
 @app.route('/ucc/documents/sign', methods=['GET', 'POST'])
 @csrf.exempt
@@ -440,6 +440,17 @@ def waza( subpath ):
     return msg, code
 
 # ==============================================================================
+# Hook desde la API de Waza, no posee firma de nada y por lo tanto sin seguridad
+# ==============================================================================
+@app.route('/waza', methods=['POST','GET','PUT'])
+@csrf.exempt
+def wazasp( ):
+    waza = UtilWaza()
+    msg, code = waza.requestProcess(request, None)
+    del waza
+    return msg, code
+
+# ==============================================================================
 # Status del sistema
 # ==============================================================================
 @app.route('/page/status', methods=['GET'])
@@ -450,16 +461,6 @@ def statusSystem() :
     del checker
     return jsonify(response), code
 
-# ==============================================================================
-# Hook desde la API de Waza, no posee firma de nada y por lo tanto sin seguridad
-# ==============================================================================
-@app.route('/waza', methods=['POST','GET','PUT'])
-@csrf.exempt
-def wazasp( ):
-    waza = UtilWaza()
-    msg, code = waza.requestProcess(request, None)
-    del waza
-    return msg, code
 
 # ==============================================================================
 # Attlasian
@@ -524,7 +525,7 @@ def access_evaluateGL():
     apyKey = request.headers.get('API-Key')
     code = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -559,7 +560,7 @@ def getGradeQH():
     message = "No autorizado"
     grade = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['user'])
         logging.info('API Key Ok, Data: ' + data_cipher )

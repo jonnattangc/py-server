@@ -4,13 +4,11 @@ try:
     import os
     import pymysql.cursors
     from datetime import datetime
-    # para hacer scraper
     from selenium import webdriver
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.wait import WebDriverWait
     from selenium.webdriver.support import expected_conditions as ec
-
-    # from werkzeug.security import generate_password_hash, check_password_hash
+    from werkzeug.security import generate_password_hash, check_password_hash
 
 except ImportError:
     logging.error(ImportError)
@@ -207,8 +205,7 @@ class GranLogia() :
                     logging.info("Usuario " + str(name) + " encontrado")
                 # guardo lo que se necesita y solo si existen ambos valores
                 if userBd != None and passwordBd != None :
-                    # check = check_password_hash(passwordBd, password ) 
-                    check = True 
+                    check = check_password_hash(passwordBd, password ) 
                     if userBd.strip() == username.strip() and check :
                         logging.info("Usuario " + str(username) + " validado Ok")
                         userResp = userBd.strip()
@@ -239,8 +236,7 @@ class GranLogia() :
                         cursor = self.db.cursor()
                         sql = """INSERT INTO secure (date_save, username, password, grade, name ) VALUES(%s, %s, %s, %s, %s)"""
                         now = datetime.now()
-                        # cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
-                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, password, grade, name_saved ))
+                        cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), username, generate_password_hash(password), grade, name_saved ))
                         self.db.commit()
                         message = 'Usuario Creado'
                         code = 201
