@@ -525,7 +525,7 @@ def access_evaluateGL():
     apyKey = request.headers.get('API-Key')
     code = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['data'])
         logging.info('API Key Ok, Data: ' + data_cipher )
@@ -560,7 +560,7 @@ def getGradeQH():
     message = "No autorizado"
     grade = 0
     http_code = 401
-    if str(apyKey) == 'd0b39697973b41a4bb1e0bc3e0eb625c' :
+    if str(apyKey) == str(LOGIA_API_KEY) :
         request_data = request.get_json()
         data_cipher = str(request_data['user'])
         logging.info('API Key Ok, Data: ' + data_cipher )
