@@ -12,7 +12,6 @@ try:
     from flask_httpauth import HTTPBasicAuth
     from flask_login import LoginManager, UserMixin, current_user, login_required, login_user
     from flask import Flask, render_template, abort, make_response, request, redirect, jsonify, send_from_directory
-    # from werkzeug import secure_filename
     # Clases personales
     from utils import Banks, Cipher
     from coordinator import Coordinator

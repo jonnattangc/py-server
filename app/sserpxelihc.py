@@ -3,7 +3,6 @@ try:
     import sys
     import os
     import time
-    import json
     import requests
     import pymysql.cursors
     from datetime import datetime, timedelta
