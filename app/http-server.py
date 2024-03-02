@@ -434,7 +434,7 @@ def reset():
 @auth.login_required
 @csrf.exempt
 def waza( subpath ):
-    waza = UtilWaza()
+    waza = UtilWaza( ROOT_DIR )
     msg, code = waza.requestProcess(request, subpath)
     del waza
     return msg, code
@@ -445,7 +445,7 @@ def waza( subpath ):
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
 def wazasp( ):
-    waza = UtilWaza()
+    waza = UtilWaza( ROOT_DIR )
     msg, code = waza.requestProcess(request, None)
     del waza
     return msg, code

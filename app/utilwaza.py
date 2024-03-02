@@ -28,8 +28,10 @@ class UtilWaza() :
     environment = None
     bearer_token = 'Bearer ' + str(waza_token)
     headers = None
+    root = './'
 
-    def __init__(self) :
+    def __init__(self, root = './'):
+        self.root = root
         try:
             self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
             self.headers = {'Content-Type': 'application/json', 'Authorization': str(self.bearer_token) }
@@ -63,7 +65,6 @@ class UtilWaza() :
         except Exception as e:
             print("ERROR BD:", e)
             self.db.rollback()
-
 
     def buildResponse(self, user, number, text_rx ) :
         response = ''
@@ -121,6 +122,108 @@ class UtilWaza() :
         except Exception as e:
             print("ERROR POST:", e)
 
+    def processMarketingMessage(self, request ) :
+        clients = []
+        count = 0
+        data_rx = {'status':'success', 'statusDescription':'Ok'}
+        code = 200
+
+        try :
+            clients = request['clients']
+            count = int(str(request['count']))
+        except Exception as e:
+            print("ERROR Marketing:", e)
+            code = 400
+            data_rx = {'status':'error', 'statusDescription':'Payload incorrecto'}
+        i = 0
+        for client in clients :
+            logging.info( str(client) )
+            data_json = {
+                'messaging_product' : 'whatsapp',
+                'recipient_type'    : 'individual',
+                'to'                : str(client['phone']),
+                'type'              : 'template',
+                'template': {
+                    'name': "atraer_clientes",
+                    'language': {
+                        'code': 'es_ES',
+                        'policy': 'deterministic'
+                    }, 
+                    'components': [
+                        {
+                            'type': 'BODY',
+                            'parameters': [
+                                {
+                                'type': 'text',
+                                'text': str(client['name'])
+                                },
+                                {
+                                'type': 'text',
+                                'text': str(client['company'])
+                                },
+                            ]
+                        },
+                    ]
+                }
+            }
+            # logging.info("Request Trx " + str(data_json) )
+            url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(self.waza_phone_id) + '/messages'
+            # logging.info("URL : " + url )
+            try :
+                response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
+                data_response = response.json()
+                if response.status_code != None and response.status_code == 200 :
+                    data_response = response.json()
+                    logging.info("Response : " + str( data_response ) )
+                    i = i + 1
+                else:
+                    logging.error("ErrorResponse : " + str( data_response ) )
+            except Exception as e:
+                print("ERROR POST:", e)
+
+        if count == i :
+            data_rx = {'status':'success', 'statusDescription': 'Mensaje enviado a ' + str(i) + ' clientes'}
+        else :
+            data_rx = {'status':'warning', 'statusDescription': 'Mensaje enviado a ' + str(i) + ' clientes'}
+
+        return jsonify(data_rx), code
+
+    def processMultiMediaMessage(self, type, id ) :
+        logging.info('Recibiendo objeto multimedia ' + str(type) + ' con Id: ' + str(id) )
+        url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(id)
+        # logging.info("URL : " + url )
+        try :
+            response = requests.get(url, headers = self.headers, timeout = 30)
+            data_response = response.json()
+            if response.status_code != None and response.status_code == 200 :
+                data_response = response.json()
+                logging.info("Response : " + str( data_response ) )
+                if str(type) == str(data_response['mime_type']) :
+                    url_img = data_response['url']
+                    img_response = requests.get(url_img, headers = self.headers, timeout = 30)
+                    if img_response.status_code != None and img_response.status_code == 200 :
+                        img = img_response.content
+                        # logging.info("Headers : " + str( img_response.headers ) )
+                        content_disposition = str( img_response.headers.get('Content-Disposition') )
+                        if content_disposition != None :
+                            name_file = content_disposition.split('=')[1]
+                            file_path = os.path.join(self.root, 'static')
+                            file_path = os.path.join(file_path, 'images')
+                            file_path = os.path.join(file_path, name_file )
+                            file = open(file_path, 'wb')
+                            file.write(img )
+                            file.close()
+                            logging.info('Archivo guardado en ' + str(file_path) )
+                    else:
+                        logging.error("CodeResponse : " + str( img.status_code ) )
+            else:
+                logging.error("ErrorResponse : " + str( data_response ) )
+        except Exception as e:
+            print("ERROR Rescatando Imagen:", e)
+
+
+
+
     def responseWazaMessage(self, change ) :
 
         contacts = None
@@ -171,17 +274,12 @@ class UtilWaza() :
                     msg_rx = messages[0]['text']['body']
                     msg_tx = self.buildResponse( name_wsuser, name_wsnumber, msg_rx )
                     self.responseTextMessage( name_wsnumber, msg_id, msg_tx, number_id )
-                elif str(msg_type) == 'image' :
-                    obj_rx_type = messages[0]['image']['mime_type']
-                    obj_rx_id = messages[0]['image']['id']
-                    logging.info("Se recibio una imagen " + str(obj_rx_id) + " del tipo " + str(obj_rx_type) )
-                elif str(msg_type) == 'audio' :
-                    obj_rx_type = messages[0]['audio']['mime_type']
-                    obj_rx_id = messages[0]['audio']['id']
-                    logging.info("Se recibio un audio " + str(obj_rx_id) + " del tipo " + str(obj_rx_type) )
                 else :
-                    logging.error('No procesado !!!!')
-
+                    obj_rx_type = messages[0][str(msg_type)]['mime_type']
+                    obj_rx_id = messages[0][str(msg_type)]['id']
+                    self.responseTextMessage( name_wsnumber, msg_id, "Estamos procensado tu archivo", number_id )
+                    self.processMultiMediaMessage( obj_rx_type, obj_rx_id )
+                    self.responseTextMessage( name_wsnumber, msg_id, "Tu archivo ha sido procesado", number_id )
                 
         elif field != None :
             response = "No hay procesamiento para este tipo de mensaje: " + field
@@ -278,16 +376,15 @@ class UtilWaza() :
 
     def requestProcess(self, request, subpath ) :
             logging.info('########################## ' + str(request.method) + ' ###################################')
-            logging.info("Reciv Header : " + str(request.headers) )
-            logging.info("Contex: " + str(subpath) )
-            logging.info("Reciv Data: " + str(request.data) )
-            logging.info("Reciv Params: " + str(request.args) )
-            logging.info('################################################################')
+            # logging.info("Reciv Header : " + str(request.headers) )
+            # logging.info("Contex: " + str(subpath) )
+            # logging.info("Reciv Data: " + str(request.data) )
+            # logging.info("Reciv Params: " + str(request.args) )
             # valores por defecto
             data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error en la ejecucion del servicio' })
             errorCode = 500
+            m1 = time.monotonic()
             try :
-                m1 = time.monotonic()
                 if str(request.method) == 'GET' :
                     if str(request.args.get('hub.mode')) == 'subscribe' :
                         data_response = str(request.args.get('hub.challenge'))
@@ -299,6 +396,8 @@ class UtilWaza() :
                             data_response, errorCode = self.generateAndSendOtp( request_data )
                         elif str(subpath) == 'validate' :
                             data_response, errorCode = self.validateOtp( request_data )
+                        elif str(subpath) == 'marketing' :
+                            data_response, errorCode = self.processMarketingMessage( request_data )
                         else :
                             data_response = jsonify({'statusCode': 404, 'statusDescription': 'Servicio no encontrado' })
                             errorCode = 404
@@ -315,9 +414,10 @@ class UtilWaza() :
                 else :
                     data_response = jsonify({'statusCode': 404, 'statusDescription': 'Metodo no disponible' })
                     errorCode = 404
-                diff = time.monotonic() - m1;
-                logging.info("Time Response in " + str(diff) + " sec." )
             except Exception as e:
                 print("ERROR POST:", e)
+            diff = time.monotonic() - m1;
+            logging.info('================================== Time Response in ' + str(diff) + ' sec. ===============================================')
+            
             return data_response, errorCode
     
