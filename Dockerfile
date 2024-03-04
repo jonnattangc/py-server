@@ -18,6 +18,10 @@ ENV ATTLASIAN_USER ''
 ENV WAZA_BEARER_TOKEN ''
 ENV AWS_S3_BUCKET ''
 ENV LOGIA_API_KEY ''
+ENV PHONE_ID ''
+ENV WAZA_API_VERSION ''
+ENV CHATBOT_API_KEY ''
+ENV FILE_CHAT_KEY ''
 
 ENV FLASK_APP app
 ENV FLASK_DEBUG development
@@ -25,17 +29,19 @@ ENV FLASK_DEBUG development
 RUN addgroup --gid 10101 jonnattan && \
     adduser --home /home/jonnattan --uid 10100 --gid 10101 --disabled-password jonnattan
 
-USER jonnattan
-
 COPY ./requirements.txt /home/jonnattan/requirements.txt
 
 RUN cd /home/jonnattan && \
     mkdir -p /home/jonnattan/.local/bin && \
     export PATH=$PATH:/home/jonnattan/.local/bin && \
     pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    chmod -R 755 /home/jonnattan  && \
+    chown -R jonnattan:jonnattan /home/jonnattan
 
 WORKDIR /home/jonnattan/app
+
+USER jonnattan
 
 EXPOSE 8085
 
