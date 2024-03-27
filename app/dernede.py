@@ -2,6 +2,7 @@ try:
     import logging
     import sys
     import os
+    import time
     from flask import jsonify
     from jose import jwe
 
@@ -70,15 +71,19 @@ class Dernede() :
             logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
             # logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
-            data_cipher = self.aes_encrypt( str(request.data) )
-            logging.info("Cipher Data: " + data_cipher.decode('UTF-8'))
-            data_clear = self.aes_decrypt(data_cipher)
-            logging.info("Reciv Data 2: " + data_clear.decode('UTF-8') )
-            data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
-            errorCode = 500
+            if str(subpath).find('timeout') >= 0 : 
+                time.sleep(50)
+                return jsonify({'statusCode': 200, 'statusDescription': 'OK' }), 200    
+            else :
+                data_cipher = self.aes_encrypt( str(request.data) )
+                logging.info("Cipher Data: " + data_cipher.decode('UTF-8'))
+                data_clear = self.aes_decrypt(data_cipher)
+                logging.info("Reciv Data 2: " + data_clear.decode('UTF-8') )
+                data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
+                errorCode = 500
 
-            if data_cipher != None :
-                data_response = data_cipher
-                errorCode = 200
+                if data_cipher != None :
+                    data_response = data_cipher
+                    errorCode = 200
 
             return data_response, errorCode

@@ -485,9 +485,10 @@ class UtilWaza() :
                         'birth_month': '2',
                         'birth_year': '3'
                     }
-                    url_verification = 'http://200.30.195.49:8001/document_verification'
+                    url_verification = 'http://192.168.0.2:8001/document_verification'
                     try :
-                        response = requests.post(url_verification, data = json.dumps(data_document_verification), headers = self.headers, timeout = 60)
+                        logging.info('Etapa 1: Verificando documento...')
+                        response = requests.post(url_verification, data = json.dumps(data_document_verification), headers = self.headers, timeout = 180)
                         if response.status_code != None and response.status_code == 200 :
                             data_response = response.json()
                             self.changeDocumentVerificationData( user, mobile, data_response )
@@ -503,9 +504,9 @@ class UtilWaza() :
                                 'faces_to_check': actions_photos,
                                 'action': str(action_str)
                             }
-                            url_verification = 'http://200.30.195.49:8001/user_verification'
-                            logging.info('Ahora la prueba de vida...')
-                            respons_action = requests.post(url_verification, data = json.dumps(data_user_verification), headers = self.headers, timeout = 60)
+                            url_verification = 'http://192.168.0.2:8001/user_verification'
+                            logging.info('Etapa 2: Verificando la accion de la persona...')
+                            respons_action = requests.post(url_verification, data = json.dumps(data_user_verification), headers = self.headers, timeout = 180)
                             if respons_action.status_code != None and respons_action.status_code == 200 :
                                 data_response_action = respons_action.json()
                                 self.changeUserVerificationData( user, mobile, data_response_action )
@@ -564,7 +565,7 @@ class UtilWaza() :
                             elif current_state == 'VALIDATING_CI' :
                                 self.responseTextMessage( wsnumber, -1, "Validando tu identidad...", number_id )
                             else :
-                                self.responseTextMessage( wsnumber, -1, "Proceso ya ha finalizado", number_id )
+                                self.responseTextMessage( wsnumber, -1, "Proceso ya ha finalizado, espera un momento más...", number_id )
                                 
                                     
                     else:
