@@ -62,7 +62,7 @@ tifffile==2023.4.12
 trio==0.22.0
 trio-websocket==0.9.2
 tzdata==2023.3
-urllib3==1.26.18
+urllib3==1.26.19
 uuid==1.30
 Werkzeug==3.0.1
 wrapt==1.15.0
