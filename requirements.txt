@@ -19,7 +19,7 @@ earthpy==0.9.4
 ecdsa==0.18.0
 exceptiongroup==1.0.4
 Flask==2.3.2
-Flask-Cors==3.0.10
+Flask-Cors==4.0.1
 Flask-HTTPAuth==4.7.0
 Flask-Login==0.6.3
 Flask-WTF==1.2.0
