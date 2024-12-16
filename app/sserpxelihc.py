@@ -91,23 +91,22 @@ class Sserpxelihc() :
 
             if( currentEnv.find('test') >= 0 ) :
                 url = 'https://testservices.wschilexpress.com/' + str(subpath)
-                if( subpath.find('rating/') >= 0 ) :
+                if( subpath.find('rating/') >= 0 or subpath.find('Rating/') >= 0 ) :
                     key = 'fd46aa18a9fe44c6b49626692605a2e8'
                 if( subpath.find('transport-orders/') >= 0 ) :
                     key = '0112f48125034f8fa42aef2441773793'
 
             if( currentEnv.find('qa') >= 0 ) :
                 url = 'https://qaservices.wschilexpress.com/' + str(subpath)
-                if( subpath.find('rating/') >= 0 ) :
-                    key = 'eb5a6789c2424b7bbe1520b4c56b747c'
+                if( subpath.find('rating/') >= 0 or subpath.find('Rating/') >= 0 ) :
+                    key = 'f25fbe75153b4f8e908e11fb5c958a1d'
+                    #key = 'fd46aa18a9fe44c6b49626692605a2e8'
                 if( subpath.find('transport-orders/') >= 0  ) :
-                    key = '389afe5ba86d4d54b6a62d37726cb4d2'
+                    key = '5a77a19b76a24297ba01c158286641b7'
                 if( subpath.find('georeference/') >= 0  ) :
-                    key = 'd0b39697973b41a4bb1e0bc3e0eb625c'
+                    key = 'a6979b4160c6465f85776f43b6c40ffb'
+                    #key = '134b01b545bc4fb29a994cddedca9379'
 
-
-            logging.info("Environment : " + str(currentEnv) )
-            logging.info("Key : " + key )
             headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
             # valores por defecto
             data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
@@ -126,14 +125,28 @@ class Sserpxelihc() :
                     diff = time.monotonic() - m1;
 
                 if (request.method == 'GET' ) :
-                    region = request.args.get('RegionCode', '-1')
-                    tipo = request.args.get('type', '-1')
-                    if ( region != '-1' and tipo != '-1' ) :
-                        url = url + "?RegionCode=" + region + "&type=" + tipo
+                    if ( subpath.find('agendadigital/') >= 0  ) :
+                        key = '9c853753ce314c81934c4f966dad7755'
+                        url = 'https://services.wschilexpress.com/' + str(subpath)
+                        headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
+                        fecha = request.args.get('fecha', '-1')
+                        if ( fecha != '-1' and subpath.find('GetArticulos') < 0 ) :
+                            url = url + "?fecha=" + fecha
+                    else:
+                        region = request.args.get('RegionCode', '-1')
+                        tipo = request.args.get('type', '-1')
+                        if ( region != '-1' and tipo != '-1' ) :
+                            url = url + "?RegionCode=" + region + "&type=" + tipo
+                    # se reevia la peticion
                     logging.info("URL : " + url )
                     resp = requests.get(url, data = request.data, headers = headers, timeout = 40)
                     diff = time.monotonic() - m1;
                 errorCode = resp.status_code
+
+                logging.info("================================================" )
+                logging.info("Environment : " + str(currentEnv) )
+                logging.info("Key : " + key )
+                
                 if( resp.status_code == 200 ) :
                     data_response = resp.json()
                     logging.info("Response CXP OK" + str( data_response ) )

@@ -26,6 +26,7 @@ class UtilWaza() :
     waza_token = os.environ.get('WAZA_BEARER_TOKEN','None')
     waza_phone_id = os.environ.get('PHONE_ID','None')
     waza_api_version = os.environ.get('WAZA_API_VERSION','None')
+    uuid = os.environ.get('UUID_WZ','None')
     database = 'gral-purpose'
     environment = None
     bearer_token = 'Bearer ' + str(waza_token)
@@ -738,7 +739,11 @@ class UtilWaza() :
                 if str(request.method) == 'GET' :
                     if str(request.args.get('hub.mode')) == 'subscribe' :
                         data_response = str(request.args.get('hub.challenge'))
-                        errorCode = 200
+                        verify = str(request.args.get('hub.verify_token'))
+                        if verify == str(self.uuid) :
+                            errorCode = 200
+                        else : 
+                            errorCode = 401
                 elif str(request.method) == 'POST' :
                     request_data = request.get_json()
                     if subpath != None :
