@@ -4,7 +4,7 @@ try:
     import os
     import time
     from flask import jsonify
-    from jose import jwe
+    # from jose import jwe
 
 except ImportError:
     logging.error(ImportError)
@@ -51,7 +51,7 @@ class Dernede() :
         data_cipher = None
         try :
             logging.info("Cifro...")
-            data_cipher = jwe.encrypt(payload, key=self.aes_key, algorithm='dir', encryption='A256GCM')
+            #data_cipher = jwe.encrypt(payload, key=self.aes_key, algorithm='dir', encryption='A256GCM')
         except Exception as e:
             print("ERROR Cipher:", e)
             data_cipher = None
@@ -61,7 +61,7 @@ class Dernede() :
         data_clear = None
         try :
             logging.info("Decifro")
-            data_clear = jwe.decrypt(data, key=self.aes_key )
+            #data_clear = jwe.decrypt(data, key=self.aes_key )
         except Exception as e:
             print("ERROR Decipher:", e)
             data_clear = None
