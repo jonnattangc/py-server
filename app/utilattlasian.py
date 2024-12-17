@@ -6,7 +6,7 @@ try:
     import pymysql.cursors
     from datetime import datetime
     from flask import jsonify
-    from atlassian import Confluence
+    #from atlassian import Confluence
 
 except ImportError:
     logging.error(ImportError)
@@ -24,12 +24,12 @@ class UtilAttlasian() :
     jira_api_token = os.environ.get('ATTLASIAN_TOKEN','None')
     attlasian_user = os.environ.get('ATTLASIAN_USER','None')
     attlasian_url = os.environ.get('ATTLASIAN_URL','None')
-    confluence = None
+    #confluence = None
 
     def __init__(self) :
         try:
             self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
-            self.confluence = Confluence(  url=self.attlasian_url, username=self.attlasian_user, password=self.jira_api_token, cloud=True)
+            #self.confluence = Confluence(  url=self.attlasian_url, username=self.attlasian_user, password=self.jira_api_token, cloud=True)
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None
@@ -38,9 +38,9 @@ class UtilAttlasian() :
     def __del__(self):
         if self.db != None:
             self.db.close()
-        if self.confluence != None :
-            del self.confluence
-            self.confluence = None
+        #if self.confluence != None :
+        #    del self.confluence
+        #    self.confluence = None
 
     def connect( self ) :
         try:
@@ -90,7 +90,7 @@ class UtilAttlasian() :
                     description_space = ''
                     id_space = ''
 
-                    cfnc = self.confluence
+                    cfnc = None #self.confluence
                     key_space = str(request_data['space'])
                     detail = cfnc.get_all_spaces(start=0, limit=500, expand=None)
                     pages_info = []
