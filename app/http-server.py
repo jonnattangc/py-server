@@ -181,6 +181,7 @@ def galery_html( name ):
 # ==============================================================================
 @app.route('/dernede/<path:subpath>', methods=['GET', 'POST'])
 @csrf.exempt
+@auth.login_required
 def dernedeProcess( subpath ):
     logging.info("Reciv /dernede ")
     edr = Dernede(ROOT_DIR)
