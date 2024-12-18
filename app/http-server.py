@@ -57,7 +57,6 @@ logger = logging.getLogger('HTTP')
 
 SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
 SECRET_CSRF = os.environ.get('SECRET_KEY_CSRF','KEY-CSRF-ACA-DEBE-IR')
-LOGIA_API_KEY = os.environ.get('LOGIA_API_KEY','None')
 
 app = Flask(__name__)
 app.config.update( DEBUG=False, SECRET_KEY = str(SECRET_CSRF), )
@@ -183,7 +182,6 @@ def galery_html( name ):
 @csrf.exempt
 @auth.login_required
 def dernedeProcess( subpath ):
-    logging.info("Reciv /dernede ")
     edr = Dernede(ROOT_DIR)
     dataTx, error = edr.requestProcess(request, subpath)
     del edr
@@ -377,7 +375,7 @@ def cxpPost( subpath ):
 
 @app.route('/cxp/<path:subpath>', methods=['POST','GET','PUT'])
 @csrf.exempt
-def processCxp( subpath ):
+def process_cxp( subpath ):
     cxp = Sserpxelihc()
     response, code = cxp.requestProcess(request, subpath)
     del cxp
@@ -390,7 +388,7 @@ def processCxp( subpath ):
 @app.route('/page/memorize/states', methods=['GET'])
 @csrf.exempt
 @auth.login_required
-def getStateCard():
+def get_state_card():
     logging.info('Solicito estados de tarjetas')
     memo = Memorize()
     names, states = memo.getState()
@@ -411,7 +409,7 @@ def getStateCard():
 @app.route('/page/memorize/state/save', methods=['POST', 'PUT'] )
 @csrf.exempt
 @auth.login_required
-def saveStateCard():
+def save_state_card():
     logging.info('Guardo estado de tarjeta')
     memo = Memorize()
     msg, code = memo.requestProcess(request)
@@ -465,7 +463,7 @@ def wazasp( ):
 # ==============================================================================
 @app.route('/page/status', methods=['GET'])
 @auth.login_required
-def statusSystem() :
+def status_system() :
     checker = Checker()
     response, code = checker.getStatusPages()
     del checker
@@ -484,195 +482,15 @@ def attlasian( subpath ):
     return msg, code
 
 # ==============================================================================
-# Realiza login en la pagina de la Gran Logia usando para ello scraper
+# Procesa peticiones de la pagina de la logia
 # ==============================================================================
-@app.route('/logia/usergl/login', methods=['POST'])
+@app.route('/logia/<path:subpath>', methods=['POST', 'GET'])
 @csrf.exempt
-def loginGL():
-    #logging.info("Reciv Header : " + str(request.headers) )
-    #logging.info("Reciv Data   : " + str(request.data) )
-    message = "No autorizado"
-    code  = 401
-    user = ''
-    name = ''
-    grade = 0,
-    apyKey = request.headers.get('API-Key')
-    if str(apyKey) == str(LOGIA_API_KEY) :
-        request_data = request.get_json()
-        data_cipher = str(request_data['data'])
-        logging.info('API Key Ok, Data: ' + data_cipher )
-        cipher = Cipher()
-        data_bytes = cipher.aes_decrypt(data_cipher)
-        data_clear = str(data_bytes.decode('UTF-8'))
-        del cipher
-        if data_clear != None :
-            datos = data_clear.split('|||')
-            if len(datos) == 2 and datos[0] != None and datos[1] != None :
-                user = str(datos[0]).strip()
-                passwd = str(datos[1]).strip()
-                if user != '' and passwd != '' :
-                    gl = GranLogia()
-                    name, grade, message, code  = gl.loginSystem( user, passwd )
-                    del gl
-    data = {
-        'message' : str(message),
-        'user' : str(user),
-        'grade' : str(grade),
-        'name' : str(name)
-    }
-    return jsonify(data), code
-
-# ==============================================================================
-# Evalua el acceso a un recurso expecifico por parte del QH
-# ==============================================================================
-@app.route('/logia/usergl/access', methods=['POST'])
-@csrf.exempt
-def access_evaluateGL():
-    #logging.info("Reciv Header : " + str(request.headers) )
-    #logging.info("Reciv Data   : " + str(request.data) )
-    message = "No autorizado"
-    code  = 401
-    apyKey = request.headers.get('API-Key')
-    code = 0
-    http_code = 401
-    if str(apyKey) == str(LOGIA_API_KEY) :
-        request_data = request.get_json()
-        data_cipher = str(request_data['data'])
-        logging.info('API Key Ok, Data: ' + data_cipher )
-        cipher = Cipher()
-        data_bytes = cipher.aes_decrypt(data_cipher)
-        data_clear = str(data_bytes.decode('UTF-8'))
-        del cipher
-        if data_clear != None :
-            datos = data_clear.split('&&')
-            if len(datos) == 2 and datos[0] != None and datos[1] != None :
-                user = str(datos[0]).strip()
-                grade = str(datos[1]).strip()
-                if user != '' and grade != '' :
-                    gl = GranLogia()
-                    message, code, http_code  = gl.validateAccess( user, grade )
-                    del gl
-    data = {
-        'message' : str(message),
-        'code' : str(code)
-    }
-    return jsonify(data), http_code
-
-# ==============================================================================
-# Evalua el acceso a un recurso expecifico por parte del QH
-# ==============================================================================
-@app.route('/logia/usergl/grade', methods=['POST'])
-@csrf.exempt
-def getGradeQH():
-    #logging.info("Reciv Header : " + str(request.headers) )
-    #logging.info("Reciv Data   : " + str(request.data) )
-    apyKey = request.headers.get('API-Key')
-    message = "No autorizado"
-    grade = 0
-    http_code = 401
-    if str(apyKey) == str(LOGIA_API_KEY) :
-        request_data = request.get_json()
-        data_cipher = str(request_data['user'])
-        logging.info('API Key Ok, Data: ' + data_cipher )
-        cipher = Cipher()
-        data_bytes = cipher.aes_decrypt(data_cipher)
-        data_clear = str(data_bytes.decode('UTF-8'))
-        del cipher
-        if data_clear != None :
-            user = data_clear.strip()
-            if user != '' :
-                gl = GranLogia()
-                message, grade, http_code  = gl.getGrade( user )
-                del gl
-    data = {
-        'message' : str(message),
-        'grade' : str(grade)
-    }
-    return jsonify(data), http_code
-
-# ==============================================================================
-# Obtiene la URL del documento asociado
-# ==============================================================================
-@app.route('/logia/docs/url', methods=['POST'])
-@csrf.exempt
-def access_docs_logia():
-    logging.info("Reciv Header : " + str(request.headers) )
-    http_code = 409
-    message = None
-    apyKey = request.headers.get('API-Key')
-    code = -1
-    cipher = Cipher()
-    data = {}
-    name_doc = ''
-    if str(apyKey) == str(LOGIA_API_KEY) :
-        request_data = request.get_json()
-        data_cipher = str(request_data['data'])
-        logging.info('API Key Ok, Data: ' + str(data_cipher) )
-        data_bytes = cipher.aes_decrypt(data_cipher)
-        data_clear = str(data_bytes.decode('UTF-8'))
-        logging.info('Data en claro: ' + str(data_clear) )
-        if data_clear != None :
-            datos = data_clear.split(';')
-            if len(datos) == 3 and datos[0] != None and datos[1] != None and datos[2] != None :
-                name_doc = str(datos[0]).strip()
-                grade_doc = str(datos[1]).strip()
-                id_qh = str(datos[2]).strip()
-                if name_doc != '' and grade_doc != '' and id_qh != '' :
-                    gl = GranLogia()
-                    message, code, http_code  = gl.validateAccess( id_qh, grade_doc )
-                    del gl
-
-    if code != -1 and message != None and http_code == 200 :
-        url_doc = 'https://dev.jonnattan.com/logia/docs/pdf/' + str(time.monotonic_ns()) + '/'
-        logging.info('URL Base: ' + str(url_doc) )
-        data_cipher = cipher.aes_encrypt( name_doc )
-        data = {
-            'data' : str(data_cipher.decode('UTF-8')),
-            'url'  : str(url_doc)
-        }
-    del cipher
-    return jsonify(data), http_code
-
-# ==============================================================================
-# Devuelve el PDF del docuemento asociado
-# ==============================================================================
-@app.route('/logia/docs/pdf/<path:subpath>', methods=['GET'])
-@csrf.exempt
-def show_pdf(subpath):
-    logging.info("Reciv Header : " + str(request.headers) )
-    file_path = os.path.join(ROOT_DIR, 'static/logia')
-    paths = str(subpath).split('/')
-    if len(paths) == 2 :
-        mark = int(str(paths[0]).strip())
-        diff = time.monotonic_ns() - mark
-        logging.info("DIFFFFFF: " + str(diff))
-        if diff < 1000000000 :
-            cipher = Cipher()
-            data_bytes = cipher.aes_decrypt(str(paths[1]).strip())
-            data_clear = str(data_bytes.decode('UTF-8'))
-            logging.info("Find File: " + str(data_clear))
-            del cipher
-            return send_from_directory(file_path, data_clear)
-    return jsonify({'message':'Acceso no autorizado'}), 401
-
-# ==============================================================================
-# Imagenes para pagina de la logia
-# ==============================================================================
-@app.route('/logia/images/<path:name>', methods=['GET'])
-@csrf.exempt
-def images_logia( name ):
-    # logging.info("Reciv Header : " + str(request.headers) )
-    fromHost = request.headers.get('Referer')
-    if fromHost != None :
-        if str(fromHost).find('https://logia.buenaventuracadiz.com') >= 0 :
-            file_path = os.path.join(ROOT_DIR, 'static')
-            file_path = os.path.join(file_path, 'images')
-            return send_from_directory(file_path, str(name) )
-        else :
-            return jsonify({'message':'Acceso no autorizado'}), 401
-    else :
-        return jsonify({'message':'Acceso no autorizado'}), 401
-
+def gran_logia_process(subpath):
+    gl = GranLogia( ROOT_DIR )
+    data, code = gl.request_process( request, subpath )
+    del gl
+    return data, code
 # ==============================================================================
 # Notificacion en CV
 # ==============================================================================
@@ -775,7 +593,7 @@ def validatehcaptcha( ):
 @app.route('/page/aws/<path:action>', methods=['GET','POST'])
 @csrf.exempt
 @auth.login_required
-def awsProcessAction( action ):
+def aws_process_action( action ):
     aws = AwsUtil(  root = str(ROOT_DIR)  )
     data_response, http_status = aws.requestProcess( request, str(action) )
     del aws
@@ -786,7 +604,7 @@ def awsProcessAction( action ):
 @app.route('/page/geo/<path:subpath>', methods=['GET','POST'])
 @csrf.exempt
 @auth.login_required
-def processGeoFeature( subpath ):
+def process_geo_feature( subpath ):
     util = GeoPosUtil( root = str(ROOT_DIR) )
     data_response, http_status = util.requestProcess( request, str(subpath) )
     del util
@@ -822,6 +640,17 @@ def print_hook():
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data   : " + str(request.data) )
     return jsonify({'message':'OK'}), 200
+
+
+@app.route('/page/cipher', methods=['POST'])
+@csrf.exempt
+@auth.login_required
+def cipher_test():
+    cipher = Cipher()
+    data, code = cipher.test( request )
+    del cipher
+    return jsonify(data), code
+
 # ===============================================================================
 # Metodo Principal que levanta el servidor
 # ===============================================================================

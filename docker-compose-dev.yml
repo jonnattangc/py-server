@@ -8,7 +8,7 @@ services:
       ports:
         - "8086:8086"
       env_file:
-        - .env
+        - ../../file.env
       networks:
         - net
       command: tail -f /home/jonnattan/requirements.txt
