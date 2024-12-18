@@ -39,7 +39,7 @@ class Ucc() :
             try :
                 if self.db != None :
                     cursor = self.db.cursor()
-                    sql = """select * from peopleucc where rut = %s"""
+                    sql = """select * from user where rut = %s"""
                     cursor.execute(sql, (rut))
                     results = cursor.fetchall()
                     for row in results:

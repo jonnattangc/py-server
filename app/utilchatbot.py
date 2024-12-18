@@ -20,7 +20,7 @@ class UtilChatbot() :
         data_question = {
             'sourceId' : str(self.doc),
             'messages' : [{
-                'role'  : 'assistant',
+                'role'  : 'user',
                 'content'  : str(question)
             }]
         }
@@ -34,7 +34,7 @@ class UtilChatbot() :
             if response.status_code != None and response.status_code == 200 :
                 data_response = response.json()
                 logging.info("Response Status Read: " + str( data_response['content'] ) )
-                txt_response = data_response['content']
+                txt_response = str(data_response['content'])
             else:
                logging.error("Response Status Read: " + str(response) ) 
 

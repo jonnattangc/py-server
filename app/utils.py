@@ -5,7 +5,7 @@ try:
     import json
     import pymysql.cursors
     from datetime import datetime
-    from jose import jwe
+    from jose import jwt # https://pypi.org/project/python-jose/
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[Deposits] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -119,7 +119,7 @@ class Cipher() :
     aes_key = ''
     algorithm = ''
 
-    def __init__(self, algorithm='aes') :
+    def __init__(self, algorithm='HS256') :
         self.id = id
         self.aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t' # 256 bit
         self.algorithm = algorithm
@@ -132,7 +132,7 @@ class Cipher() :
         data_cipher = None
         try :
             logging.info("Cifro " + str(self.algorithm))
-            data_cipher = jwe.encrypt(payload, key=self.aes_key, algorithm='dir', encryption='A256GCM')
+            data_cipher = jwt.encode( payload, self.aes_key, algorithm=self.algorithm )
         except Exception as e:
             print("ERROR Cipher:", e)
             data_cipher = None
@@ -142,7 +142,7 @@ class Cipher() :
         data_clear = None
         try :
             logging.info("Decifro " + str(self.algorithm))
-            data_clear = jwe.decrypt(data, key=self.aes_key )
+            data_clear = jwe.decrypt(data, self.aes_key, algorithm=[self.algorithm] )
         except Exception as e:
             print("ERROR Decipher:", e)
             data_clear = None

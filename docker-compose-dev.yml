@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+    py-server-dev:
+      container_name: py-server-dev
+      image: pyserver:dev
+      volumes:
+        - ./app:/home/jonnattan/app
+      ports:
+        - "8086:8086"
+      env_file:
+        - .env
+      networks:
+        - net
+      command: tail -f /home/jonnattan/requirements.txt
+
+networks:
+  net:

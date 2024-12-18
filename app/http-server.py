@@ -181,6 +181,7 @@ def galery_html( name ):
 # ==============================================================================
 @app.route('/dernede/<path:subpath>', methods=['GET', 'POST'])
 @csrf.exempt
+@auth.login_required
 def dernedeProcess( subpath ):
     logging.info("Reciv /dernede ")
     edr = Dernede(ROOT_DIR)
@@ -374,6 +375,15 @@ def cxpPost( subpath ):
     del cxp
     return response, code
 
+@app.route('/cxp/<path:subpath>', methods=['POST','GET','PUT'])
+@csrf.exempt
+def processCxp( subpath ):
+    cxp = Sserpxelihc()
+    response, code = cxp.requestProcess(request, subpath)
+    del cxp
+    return response, code
+
+
 # ==============================================================================
 # Para el juego del memorize
 # ==============================================================================
@@ -434,7 +444,7 @@ def reset():
 @auth.login_required
 @csrf.exempt
 def waza( subpath ):
-    waza = UtilWaza()
+    waza = UtilWaza( ROOT_DIR )
     msg, code = waza.requestProcess(request, subpath)
     del waza
     return msg, code
@@ -445,7 +455,7 @@ def waza( subpath ):
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
 def wazasp( ):
-    waza = UtilWaza()
+    waza = UtilWaza( ROOT_DIR )
     msg, code = waza.requestProcess(request, None)
     del waza
     return msg, code
@@ -735,7 +745,7 @@ def validatehcaptcha( ):
     token = str(request_data['token'])
     secret = str(request_data['secret'])
     sitekey = str(request_data['sitekey'])
-    
+
     logging.info("token recibido de largo " + str(len(token)) )
     diff = 0
     m1 = time.monotonic()
@@ -802,6 +812,15 @@ def favicon():
     return send_from_directory(file_path,
             'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+# ===============================================================================
+# Sólo para presentar en pantalla el log
+# ===============================================================================
+@app.route('/page/hook', methods=['POST','GET','PUT'])
+@csrf.exempt
+def print_hook():
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data   : " + str(request.data) )
+    return jsonify({'message':'OK'}), 200
 # ===============================================================================
 # Metodo Principal que levanta el servidor
 # ===============================================================================

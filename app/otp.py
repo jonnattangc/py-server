@@ -154,7 +154,7 @@ class Otp() :
             print("ERROR BD:", e)
             self.db.rollback()
 
-    def createOtp(self, mobile = '', mail = '', whatsapp = '', duration_min = 0, len = 6 ) :
+    def createOtp(self, mobile = None, mail = None, whatsapp=False, duration_min = 0, len = 6 ) :
         logging.info("Genera nueva instancia de OTP")
         otp = None
         ref = None
@@ -166,8 +166,8 @@ class Otp() :
                 now = datetime.now()
 
                 channel = 'mail'
-                if mobile != '' : channel = 'sms'
-                if whatsapp != '' : channel = 'whatsapp'
+                if mobile != None : channel = 'sms'
+                if whatsapp : channel = 'whatsapp'
 
                 if duration_min == 0 :
                     duration_min = self.duration_min
