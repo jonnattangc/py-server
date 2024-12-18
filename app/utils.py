@@ -5,7 +5,7 @@ try:
     import json
     import pymysql.cursors
     from datetime import datetime
-    from jose import jwt # https://pypi.org/project/python-jose/
+    from jose import jwe # https://pypi.org/project/python-jose/
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[Deposits] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -119,9 +119,9 @@ class Cipher() :
     aes_key = ''
     algorithm = ''
 
-    def __init__(self, algorithm='HS256') :
+    def __init__(self, algorithm='A256GCM') :
         self.id = id
-        self.aes_key = 'dRgUkXp2s5v8y/B?E(H+MbQeThVmYq3t' # 256 bit
+        self.aes_key = 'AAAAASSSSSDDDDDDFFFFFGGGGGHHHHJJJJJHHHGGGFFDDSDSSSSSDDDFFFGGGHHHGGFDD' # 256 bit
         self.algorithm = algorithm
 
     def __del__(self):
@@ -131,8 +131,10 @@ class Cipher() :
     def aes_encrypt(self, payload ) :
         data_cipher = None
         try :
+            key = self.aes_key.encode('utf-8')[:32]
+            plaintext = str(payload).encode('utf-8')
             logging.info("Cifro " + str(self.algorithm))
-            data_cipher = jwt.encode( payload, self.aes_key, algorithm=self.algorithm )
+            # data_cipher = jwe.encrypt(plaintext=plaintext, key=key, algorithm='A256KW', encryption='A256CBC-HS512')
         except Exception as e:
             print("ERROR Cipher:", e)
             data_cipher = None
@@ -142,8 +144,24 @@ class Cipher() :
         data_clear = None
         try :
             logging.info("Decifro " + str(self.algorithm))
-            data_clear = jwe.decrypt(data, self.aes_key, algorithm=[self.algorithm] )
+            data_clear = jwt.decrypt(data, self.aes_key, algorithm=[self.algorithm] )
         except Exception as e:
             print("ERROR Decipher:", e)
             data_clear = None
         return data_clear
+    
+    def test( self, request ) : 
+        response_data = {"message":"NOk", "data": None }
+        http_code = 400
+        logging.info("Reciv Header : " + str(request.headers) )
+        logging.info("Reciv " + str(request.method) )
+        logging.info("Reciv Data: " + str(request.data) )
+        request_data = request.get_json()
+        user = request_data['user']
+        passwd = request_data['password']
+        clean_text = {"data": str(user) + "|||" + str(passwd)}
+        aes_encrypt = self.aes_encrypt( clean_text )
+        if aes_encrypt != None :
+            response_data = {"message":"Ok", "data": aes_encrypt }
+            http_code = 200
+        return response_data, http_code

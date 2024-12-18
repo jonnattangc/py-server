@@ -73,7 +73,7 @@ class Dernede() :
     def requestProcess(self, request, subpath ) :
             data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
             errorCode = 500
-            logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
+            logging.info("Reciv " + str(request.method) + " Contex: /dernede/" + str(subpath) )
             logging.info("Reciv Data: " + str( request.get_json()) )
             if str(subpath).find('timeout') >= 0 : 
                 time.sleep(50)
