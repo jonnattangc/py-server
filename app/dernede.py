@@ -4,7 +4,7 @@ try:
     import os
     import time
     from flask import jsonify
-    # from jose import jwe
+    from jose import jwt
 
 except ImportError:
     logging.error(ImportError)
@@ -47,43 +47,49 @@ class Dernede() :
         except Exception as e :
             print("ERROR File:", e)
 
-    def aes_encrypt(self, payload ) :
+    def aes_encrypt(self, data ) :
         data_cipher = None
         try :
-            logging.info("Cifro...")
-            #data_cipher = jwe.encrypt(payload, key=self.aes_key, algorithm='dir', encryption='A256GCM')
+            key = self.aes_key.encode('utf-8')[:32]
+            protected = {'alg': 'HS256'}
+            payload = {'message': data }
+            data_cipher = jwt.encode(payload, key, algorithm=protected['alg'])
         except Exception as e:
             print("ERROR Cipher:", e)
             data_cipher = None
         return data_cipher
 
-    def aes_decrypt(self, data ) :
+    def aes_decrypt(self, message ) :
         data_clear = None
         try :
-            logging.info("Decifro")
-            #data_clear = jwe.decrypt(data, key=self.aes_key )
+            key = self.aes_key.encode('utf-8')[:32]
+            protected = {'alg': 'HS256'}
+            data_clear = jwt.decode(str(message), key, algorithms=[protected['alg']])
         except Exception as e:
             print("ERROR Decipher:", e)
             data_clear = None
         return data_clear
 
     def requestProcess(self, request, subpath ) :
+            data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
+            errorCode = 500
             logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
-            # logging.info("Reciv Header : " + str(request.headers) )
-            logging.info("Reciv Data: " + str(request.data) )
+            logging.info("Reciv Data: " + str( request.get_json()) )
             if str(subpath).find('timeout') >= 0 : 
                 time.sleep(50)
-                return jsonify({'statusCode': 200, 'statusDescription': 'OK' }), 200    
+                data_response = jsonify({'statusCode': 200, 'statusDescription': 'OK' }) 
+                errorCode = 200    
             else :
-                data_cipher = self.aes_encrypt( str(request.data) )
-                logging.info("Cipher Data: " + data_cipher.decode('UTF-8'))
-                data_clear = self.aes_decrypt(data_cipher)
-                logging.info("Reciv Data 2: " + data_clear.decode('UTF-8') )
-                data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
-                errorCode = 500
-
+                logging.info("Cifro...")
+                data_cipher = self.aes_encrypt( request.get_json() )
                 if data_cipher != None :
-                    data_response = data_cipher
+                    logging.info("Encrypt Ok")
+                    data_clear = self.aes_decrypt(data_cipher)
+                    if data_clear != None :
+                        logging.info("Decript Ok: " + str(data_clear))
+
+                if data_cipher != None:
+                    data_response = jsonify({'jwt' : data_cipher})
                     errorCode = 200
 
             return data_response, errorCode

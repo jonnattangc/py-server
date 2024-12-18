@@ -679,22 +679,23 @@ def images_logia( name ):
 @app.route('/page/cv/<path:subpath>', methods=['GET'])
 @csrf.exempt
 @auth.login_required
-def processCV( subpath ):
+def process_cv( subpath ):
     data_cv = ''
     try :
-        logging.info("Obtengo CV de: " + str(subpath) )
-        file_path = os.path.join(ROOT_DIR, 'static/cvs')
-        file_path = os.path.join(file_path, str(subpath) + '_cv.data')
-        with open(file_path) as file:
-            data_cv = file.read()
-            file.close()
+        if subpath != None and subpath.find('/') < 0 and len(subpath) > 0 :
+            logging.info("Obtengo CV de: " + str(subpath) )
+            file_path = os.path.join(ROOT_DIR, 'static/cvs')
+            file_path = os.path.join(file_path, str(subpath) + '_cv.data')
+            with open(file_path) as file:
+                data_cv = file.read()
+                file.close()
     except Exception as e:
-        print("ERROR POST:", e)
+        print("ERROR process_cv() :", e)
     data = {
         "name": "Jonnattan Griffiths",
         "data": str(data_cv)
     }
-    return jsonify(data)
+    return jsonify(data), 200
 
 # ==============================================================================
 # Servicio para validar el recaptcha
