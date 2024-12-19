@@ -3,7 +3,7 @@ services:
     python-server:
       container_name: python-server
       # Crea la imagen con el archivo Dockerfile de esta misma carpeta
-      image: python-server:v1.7
+      image: python-server:v2.0
       restart: always
       volumes:
         - ./app:/home/jonnattan/app

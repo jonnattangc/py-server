@@ -2,7 +2,7 @@ version: '3.9'
 services:
     py-server-dev:
       container_name: py-server-dev
-      image: pyserver:dev
+      image: python-server:develop
       volumes:
         - ./app:/home/jonnattan/app
       ports:

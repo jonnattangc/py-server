@@ -4,8 +4,8 @@ try:
     import os
     import time
     import requests
-    import geopandas as gpd
-    from shapely.geometry import Point
+    #import geopandas as gpd
+    #from shapely.geometry import Point
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[GeoPosUtil] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -23,7 +23,7 @@ class GeoPosUtil() :
             file_path = os.path.join(file_path, 'shapes')
             self.file_name = file_path + '/' + str(name)
             logging.info('GeoPos Test, Carga: ' + str(self.file_name))
-            self.map = gpd.read_file(str(self.file_name))
+            self.map = None#gpd.read_file(str(self.file_name))
         except Exception as e:
             print("[GeoPosUtil] ERROR GEO:", e)
 
@@ -46,7 +46,7 @@ class GeoPosUtil() :
             lat = float(request_data['latitude'])
             lon = float(request_data['longitude'])
             country = str(request_data['country'])
-            point = Point(lon,lat)
+            point = None # Point(lon,lat)
             if self.inside(point, country) : 
                 code = 200
                 data = {'inside': True}
