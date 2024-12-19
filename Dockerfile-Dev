@@ -1,15 +1,16 @@
-FROM python:3.13-slim
+FROM python:3.14.0a2-alpine3.21
 
-LABEL VERSION=1.7
-LABEL DESCRIPCION="Python Server HTTP V1.7"
+LABEL VERSION=2.0
+LABEL DESCRIPCION="Python Server HTTP V2.0"
 
 ENV HOST_BD ''
 ENV USER_BD ''
 ENV PASS_BD ''
 ENV USER_BD_LOGIA ''
 ENV PASS_BD_LOGIA ''
+ENV LOGIA_API_KEY ''
+ENV LOGIA_BASE_URL ''
 ENV NOTIFICATION_URL ''
-ENV HUB_SELENIUM_URL ''
 ENV AWS_PINPOINT_APP_ID ''
 ENV API_KEY_ROBOT_UPTIME ''
 ENV ATTLASIAN_TOKEN ''
@@ -17,7 +18,6 @@ ENV ATTLASIAN_URL ''
 ENV ATTLASIAN_USER ''
 ENV WAZA_BEARER_TOKEN ''
 ENV AWS_S3_BUCKET ''
-ENV LOGIA_API_KEY ''
 ENV PHONE_ID ''
 ENV WAZA_API_VERSION ''
 ENV UUID_WZ ''
@@ -27,8 +27,7 @@ ENV FILE_CHAT_KEY ''
 ENV FLASK_APP app
 ENV FLASK_DEBUG development
 
-RUN addgroup --gid 10101 jonnattan && \
-    adduser --home /home/jonnattan --uid 10100 --gid 10101 --disabled-password jonnattan
+RUN adduser -h /home/jonnattan -u 10100 -g 10101 --disabled-password jonnattan
 
 COPY ./requirements.txt /home/jonnattan/requirements.txt
 
