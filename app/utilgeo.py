@@ -38,7 +38,7 @@ class GeoPosUtil() :
     # Metodo que pregunta si un punto est'a dentro de un pa'is
     # por una posici'on dentro del mapa
     # ==============================================================================
-    def pointInside(self, request ) :
+    def point_inside(self, request ) :
         code = 409
         data = {}
         try :
@@ -81,9 +81,9 @@ class GeoPosUtil() :
     # ==============================================================================
     # Busca la cordenada de una direcci'on en Chile
     # ==============================================================================
-    def searchAddress(self, request ) :
+    def search_address(self, request ) :
         code = 409
-        data = {}
+        data = None
         try :
             request_data = request.get_json()
             address = str(request_data['address'])
@@ -93,7 +93,7 @@ class GeoPosUtil() :
             address = address.replace('.', ' ')
             address = address.replace('  ', ' ')
             address = address.replace(' ', '+')
-            logging.info("data_cipher: " + address )
+            logging.info("Addres: " + address )
             url = 'https://nominatim.openstreetmap.org/search?q=' + address
             #url += '&country=Chile'
             url += '&format=jsonv2'
@@ -104,14 +104,14 @@ class GeoPosUtil() :
             logging.info("URL : " + url )
             resp = requests.get(url, headers = headers, timeout = 40)
             diff = time.monotonic_ns() - m1
+            code = resp.status_code
             if( resp.status_code == 200 ) :
                 data_response = resp.json()
                 logging.info("Response: " + str( data_response ) )
                 data = {
                     'latitude'  : str( data_response[0]['lat'] ),
                     'longitude' : str( data_response[0]['lon'] ),
-                    'name'      : str( data_response[0]['display_name'] ),
-                    'message'   : 'Servicio Ejecutado Existosamente'
+                    'name'      : str( data_response[0]['display_name'] )
                 }  
                 code = 200
             else :
@@ -121,23 +121,19 @@ class GeoPosUtil() :
             logging.info("Time Response in " + str(diff/1000000000.0) + " sec." )
 
         except Exception as e:
-            print("ERROR POST:", e)
+            print("ERROR search_address:", e)
         return data, code
 
     # ==============================================================================
     # Procesa todos los request 
     # ==============================================================================
-    def requestProcess(self, request, subpath ) :
-        logging.info("############################ Geo Util ##############################" )
-        logging.info("Reciv " + str(request.method) + " Subpath: " + str(subpath) )
-        logging.info("Reciv Data: " + str(request.data) )
-        logging.info("Reciv Header : " + str(request.headers) )
+    def request_process(self, request, subpath ) :
         m1 = time.monotonic()
         try :
             if subpath == 'search' : 
-                return self.searchAddress( request )
+                return self.search_address( request )
             elif subpath == 'inside' :
-                return self.pointInside( request )
+                return self.point_inside( request )
         except Exception as e:
             print("[GeoPosUtil] Error requestProcess:", e)
         diff = time.monotonic() - m1

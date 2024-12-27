@@ -45,7 +45,7 @@ USER jonnattan
 
 EXPOSE 8086
 
-CMD [ "python", "http-server.py", "8085"]
+CMD [ "python", "http-server.py", "8086"]
 # python3 http-server.py 8085
 # CMD [ "tail", "-f", "/home/jonnattan/requirements.txt" ]
 # pip freeze > requirements.txt

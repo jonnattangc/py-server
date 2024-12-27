@@ -6,6 +6,8 @@ try:
     import os
     import requests
     import pymysql.cursors
+    import time
+    import json
     from datetime import datetime, timedelta
     from utils import Banks
 except ImportError:
@@ -139,9 +141,12 @@ class Coordinator() :
                     "status": str(status)
                 }
 
-    def proccessSolicitude( self, req , paths ) :
+    def proccess_solicitude( self, request , subpath : str) :
+        m1 = time.monotonic_ns()
         dataTx = {}
-        if len(paths) >= 3 :
+        http_code = 200
+        paths = subpath.split('/')
+        if len(paths) >= 3 and subpath.find('dreams') < 0 :
             logging.info('paths[2]: ' + str(paths[2]) )
             if paths[2].find('bank_dates') >= 0 :
                 id = req.args.get('id', '-1')
@@ -164,7 +169,90 @@ class Coordinator() :
                 dataTx =  {
                     "status": "success"
                 }
-        return dataTx
+        else :
+            if subpath.find('dreams') >= 0 :
+                #logging.info("################ DREAMS Reciv Action: " + str(subpath) )
+                #logging.info("Reciv H : " + str(request.headers) )
+                #logging.info("Reciv D: " + str(request.data) )
+                m1 = time.monotonic()
+                diff = 0
+                request_data = request.get_json()
+                url = os.environ.get('SLACK_NOTIFICATION','None')
+                headers = {'Content-Type': 'application/json'}
+                response = None
+                request_tx = {}
+
+                if str(subpath).find('deposito') >= 0 :
+                    monto = str(request_data['amount'])
+                    fecha = str(request_data['date'])
+                    name = str(request_data['name'])
+                    rut = str(request_data['identity'])
+                    bank = str(request_data['bank'])
+                    account = str(request_data['account'])
+                    code = str(request_data['code'])
+
+                    request_tx = {
+                            'username': 'OJO: Notificación de depósito',
+                            'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
+                            'attachments': [
+                                {
+                                    'fallback'      : 'Nuevo deposito',
+                                    'pretext'       : 'Datos de Origen',
+                                    'text'          : 'Nombre: ' + name,
+                                    'color'         : 'good',
+                                    'fields'        : [
+                                        {
+                                            'title': 'Rut',
+                                            'value': rut,
+                                            'short': True
+                                        },{
+                                            'title': 'Banco',
+                                            'value': bank,
+                                            'short': True
+                                        },{
+                                            'title': 'Cuenta',
+                                            'value': account,
+                                            'short': True
+                                        },{
+                                            'title': 'Código',
+                                            'value': code,
+                                            'short': True
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                else :
+                    error_msg = 'Favor cambiar url !!! \n' + str(request_data['message'])
+                    request_tx = {
+                            'username': '[jonnattan.com]: Notificación Recibida',
+                            'text': error_msg,
+                        }
+
+                try :
+                    logging.info("URL : " + url )
+                    if url != 'None' :
+                        response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+                        diff = time.monotonic() - m1;
+                        http_code = response.status_code 
+                        if( response != None and response.status_code == 200 ) :
+                            logging.info('Response Slack' + str( response ) )
+                        elif( response != None and response.status_code != 200 ) :
+                            logging.info("Response NOK" + str( response ) )
+                        else :
+                            logging.info("Nose pudo notificar por Slak")
+                except Exception as e:
+                    print("ERROR POST:", e)
+
+                logging.info("Time Response in " + str(diff) + " sec.")
+                return dataTx, http_code
+            else: 
+                # logging.info("Reciv H : " + str(request.headers) )
+                banks = Banks()
+                data = banks.json_banks
+                del banks
+        logging.info("Response time " + str(time.monotonic_ns() - m1) + " ns")
+        return dataTx, http_code
 
 class Deposit() :
 

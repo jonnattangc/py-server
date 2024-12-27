@@ -60,11 +60,11 @@ class AwsUtil() :
     # ==============================================================================
     # Procesa todos los request 
     # ==============================================================================
-    def requestProcess(self, request, action ) :
-        logging.info("############################ AWS Util ##############################" )
-        logging.info("Reciv " + str(request.method) + " Acción: " + str(action) )
-        logging.info("Reciv Data: " + str(request.data) )
-        logging.info("Reciv Header : " + str(request.headers) )
+    def request_process(self, request, action ) :
+        #logging.info("############################ AWS Util ##############################" )
+        #logging.info("Reciv " + str(request.method) + " Acción: " + str(action) )
+        #logging.info("Reciv Data: " + str(request.data) )
+        #logging.info("Reciv Header : " + str(request.headers) )
         
         data = {'status':'Error ocurrido'}
         status = 409
@@ -211,26 +211,28 @@ class AwsUtil() :
     # Muestra la informaci'on del servicio
     # ==============================================================================
     def pinpointInfo( self ) :
-        retorno = {'status': 'ok'}
+        retorno = {'channel': None, 'application': None, 'channels': None }
         status = 200
         m1 = time.monotonic()
         try :
             logging.info( "[PINTPOINT] Info de servicio" )
             if self.pinpoint != None :
                 logging.info("[PINTPOINT] ==============================get_email_channel==============================================" )
-                response = self.pinpoint.get_email_channel(ApplicationId=str(self.app_id))
-                logging.info("Response: " + str(response) )
+                channel = self.pinpoint.get_email_channel(ApplicationId=str(self.app_id))
+                logging.info("Response: " + str(channel ) )
                 logging.info("[PINTPOINT] ============================================================================" )
 
                 logging.info("[PINTPOINT] ================================get_app============================================" )
-                response = self.pinpoint.get_app(ApplicationId=str(self.app_id))
-                logging.info("Response: " + str(response) )
+                application = self.pinpoint.get_app(ApplicationId=str(self.app_id))
+                logging.info("Response: " + str(application) )
                 logging.info("[PINTPOINT] ============================================================================" )
 
                 logging.info("[PINTPOINT] ================================get_channels============================================" )
-                response = self.pinpoint.get_channels(ApplicationId=str(self.app_id))
-                logging.info("Response: " + str(response) )
+                channels = self.pinpoint.get_channels(ApplicationId=str(self.app_id))
+                logging.info("Response: " + str(channels) )
                 logging.info("[PINTPOINT] ============================================================================" )
+
+                retorno = {'channel': channel, 'application': application, 'channels': channels }
                 
         except Exception as e:
             print("[PINTPOINT] ERROR AWS:", e)
@@ -250,8 +252,8 @@ class AwsUtil() :
             logging.info( "[SES] Info de servicio" )
             if self.ses != None :
                 logging.info("[SES] ==============================get_send_quota==============================================" )
-                response = self.ses.get_send_quota()
-                logging.info("Response: " + str(response) )
+                retorno = self.ses.get_send_quota()
+                logging.info("Response: " + str(retorno) )
                 logging.info("[SES] ============================================================================" )
                 
         except Exception as e:
