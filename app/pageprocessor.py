@@ -14,7 +14,6 @@ try:
     from memorize import Memorize
     from utilaws import AwsUtil
     from utilwaza import UtilWaza
-    from utilgeo import GeoPosUtil
     from utilattlasian import UtilAttlasian
     from captcha import Captcha
     from utils import Banks, Cipher
@@ -99,12 +98,6 @@ class Page :
             if str(subpath).find('hook') >= 0 :
                 data, http_code = self.hook_process( json_data )
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
-            elif str(subpath).find('geo/') >= 0 :
-                path = str(subpath).replace('geo/', '')
-                util = GeoPosUtil(root = self.root_dir)
-                data, http_code = util.request_process( request, path )
-                data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
-                del util
             elif str(subpath).find('aws/') >= 0 :
                 action = str(subpath).replace('aws/', '')
                 aws = AwsUtil(root = self.root_dir)
