@@ -18,6 +18,7 @@ try:
     from utilattlasian import UtilAttlasian
     from captcha import Captcha
     from utils import Banks, Cipher
+    from check import Checker
 
 except ImportError:
 
@@ -53,14 +54,14 @@ class Page :
         del self.cipher
         self.cipher = None
 
-    def request_process(self, request, subpath ) :
+    def request_process(self, request, subpath: str ) :
         data_response = {"message" : "No autorizado", "code": 401, "data": None}
         http_code  = 401
         json_data = None
 
         logging.info("Reciv " + str(request.method) + " Contex: /page/" + str(subpath) )
-        #logging.info("Reciv Header : " + str(request.headers) )
-        #logging.info("Reciv Data: " + str(request.data) )
+        logging.info("Reciv Data: " + str(request.data) )
+        logging.info("Reciv Header :\n" + str(request.headers) )
 
         rx_api_key = request.headers.get('x-api-key')
         if str(rx_api_key) != str(self.api_key) :
@@ -110,7 +111,7 @@ class Page :
                 data, http_code = aws.request_process( request, str(action) )
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
                 del aws
-            elif str(subpath).find('hcaptcha/') >= 0 :
+            elif str(subpath).find('hcaptcha') >= 0 :
                 hcaptcha = Captcha()
                 data, http_code = hcaptcha.hcaptcha_process( json_data )
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
@@ -122,7 +123,7 @@ class Page :
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('memorize/') >= 0 :
                 action = str(subpath).replace('memorize/', '')
-                data, http_code = self.memorize_process(request, action)
+                data, http_code = self.memorize_process(json_data, action)
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('waza/') >= 0 :
                 action = str(subpath).replace('waza/', '')
@@ -159,7 +160,7 @@ class Page :
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('memorize/') >= 0 :
                 action = str(subpath).replace('memorize/', '')
-                data, http_code = self.memorize_process(request, action)
+                data, http_code = self.memorize_process(json_data, action)
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('image/') >= 0 :
                 name_file = str(subpath).replace('image/', '')
@@ -187,6 +188,13 @@ class Page :
                     http_code = 200
                 del cxp
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
+            elif subpath.find('status') >=0 :
+                check = Checker()
+                data, http_code = check.get_status_pages()
+                if http_code == 200 : 
+                    data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
+                else : 
+                    data_response = {"message" : "ERROR", "code": -1, "data": None }
             else :
                 data_response = {"message" : "Servicio GET no encontrado", "code": 404, "data": None}
                 http_code  = 404
@@ -194,27 +202,28 @@ class Page :
         return  data_response, http_code
 
 
-    def memorize_process( self, request, action: str ) :
-        memo = Memorize()
-        data = None
+    def memorize_process( self, json_data, action: str ) :
+        states = None
         http_code = 200 
-
-        if action.find('reset/') >= 0 :
-            data, http_code = memo.resetProcess()
-        if action.find('save/') >= 0 :
-            data, http_code =  memo.requestProcess(request)
-        if action.find('states/') >= 0 :
-            names, states = memo.getState()
+        if action.find('reset') >= 0 :
+            memo = Memorize()
+            states, http_code = memo.reset()
             del memo
-            data = []
+        if action.find('save') >= 0 :
+            memo = Memorize()
+            visible, http_code =  memo.process(json_data)
+            states = { 'visible': visible }
+            del memo
+        if action.find('states') >= 0 :
+            memo = Memorize()
+            names, estados = memo.state()
+            del memo
+            states = []
             i = 0
             for name in names :
-                data.append({
-                    'name': name,
-                    'state': states[i]
-                })
+                states.append({'name': name,'state': estados[i]})
                 i = i + 1
-        return data, http_code
+        return states, http_code
 
     def waza_process(self, request, subpath ) :
         waza = UtilWaza( self.root_dir )
@@ -261,6 +270,6 @@ class Page :
             code = 401
         data_response = {
             "name": "Jonnattan Griffiths",
-            "data": str(data_cv)
+            "cv": str(data_cv)
         }
         return data_response, code

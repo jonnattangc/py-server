@@ -96,7 +96,7 @@ class AwsUtil() :
                 if channel != None and request.method == 'POST' :
                     return self.validateOtp( channel, otp, )
             elif str(action) == 'contents' :
-                return self.testAws()
+                return self.s3ObjectList()
             elif str(action) == 'file/upload' :
                 return self.s3Uploader( request )
             else :

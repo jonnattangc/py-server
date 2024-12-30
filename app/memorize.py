@@ -40,7 +40,7 @@ class Memorize() :
     def isConnect(self) :
         return self.db != None
     # ==============================================================================
-    def getState(self) :
+    def state(self) :
         names = []
         states = []
         try :
@@ -60,7 +60,7 @@ class Memorize() :
         
         return names, states
 # ==============================================================================
-    def resetProcess(self ) :
+    def reset(self ) :
         msg = 'Ha ocurrio un error'
         code = 500
         try :
@@ -76,8 +76,12 @@ class Memorize() :
             self.db.rollback()
         return msg, code
 # ==============================================================================
-    def saveProcess(self, card, state) :
-        msg = 'Ha ocurrio un error'
+    def save_process(self, card, state) :
+        visible = False
+        if str(state) == 'down' :
+            visible = False
+        else : 
+            visible = True
         code = 500
         try :
             if self.isConnect() :
@@ -85,15 +89,12 @@ class Memorize() :
                 sql = """UPDATE proxy set environment=%s where client=%s and name=%s"""
                 cursor.execute(sql, (state, 'ionix-day', card ))
                 self.db.commit()
-                msg = 'Servicio Ejecutado exitosamente'
                 code = 200
         except Exception as e:
             print("ERROR BD:", e)
             self.db.rollback()
-        return msg, code
+            visible = not visible
+        return visible, code
 # ==============================================================================
-    def requestProcess(self, request ) :
-        logging.info("Reciv Data: " + str(request.data) )
-        # logging.info("Reciv Header : " + str(request.headers) )
-        request_data = request.get_json()
-        return self.saveProcess( str(request_data['card']), str(request_data['state']))
+    def process(self, json_data ) :
+        return self.save_process( str(json_data['card']), str(json_data['state']))

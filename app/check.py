@@ -59,10 +59,9 @@ class Checker() :
         logging.info("Response in " + str(time_response) + " ms")
         return data
     
-    def getStatusPages(self) : 
-        data = {'statusCode': -1, 'statusDescription': 'Error' }
+    def get_status_pages(self) : 
+        data_response = None
         code = 402
-
         try :
             data_json = {
                 'api_key' : str(self.api_key)
@@ -76,14 +75,8 @@ class Checker() :
                 code = response.status_code
                 if response.status_code == 200 :
                     data_response = response.json()
-                    logging.info("Response JSON: " + str( data_response ) )
-                    data = {
-                        'data'   : data_response,
-                        'statusCode' : 0,
-                        'statusDescription': 'Ok'
-                    }
         except Exception as e:
             print("ERROR Status:", e)
 
-        return data, code
+        return data_response, code
 
