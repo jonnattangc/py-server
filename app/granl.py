@@ -36,7 +36,7 @@ class GranLogia () :
         logging.info("Reciv Data: " + str(request.data) )
         # evlua api-key inmediatamente
         logia_api_key = str(os.environ.get('LOGIA_API_KEY','None'))
-        api_key = request.headers.get('API-Key')
+        api_key = request.headers.get('x-api-key')
         if str(api_key) != str(logia_api_key) :
             return  data_response, http_code
         request_data = request.get_json()
@@ -59,7 +59,7 @@ class GranLogia () :
                         passwd = str(datos[1]).strip()
                         if user != '' and passwd != '' :
                             scraper = Selenium()
-                            name, grade, message, code  = scraper.login_system( user, passwd )
+                            name, grade, message, http_code  = scraper.login_system( user, passwd )
                             del scraper
                             data_response = jsonify({
                                 'message' : str(message),
@@ -67,7 +67,6 @@ class GranLogia () :
                                 'grade' : str(grade),
                                 'name' : str(name)
                             })
-                            http_code = 200
             elif str(subpath).find('usergl/access') >= 0 :
                 if data_clear != None :
                     datos = data_clear.split('&&')
