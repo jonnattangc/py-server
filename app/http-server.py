@@ -204,26 +204,27 @@ def gran_logia_process(subpath):
 # ==============================================================================
 # Procesa solicitudes desde pagina web
 # ==============================================================================
+@app.get('/page')
+@csrf.exempt
+def page_page() :
+    page = Page()
+    data_response, http_status, is_page = page.request_process( request, "web" )
+    del page
+    if is_page:
+        return data_response, http_status    
+    else:
+        return jsonify(data_response), http_status
 @app.route('/page/<path:subpath>', methods=['GET','POST'])
 @csrf.exempt
 @auth.login_required
 def process_page( subpath ):
     page = Page()
-    data_response, http_status = page.request_process( request, str(subpath) )
+    data_response, http_status, is_page = page.request_process( request, str(subpath) )
     del page
-    return jsonify(data_response), http_status
-
-#===============================================================================
-# Formulario para probar los de CSFR Token Proteccion
-#===============================================================================
-@app.route('/page', methods=['GET'])
-def test__form_csrf():
-    return render_template( 'create.html' )
-
-@app.route('/page/csrf', methods=['POST'])
-def test_csrf():
-    logging.info("Reciv Solicitud con CSRF!! ")
-    return render_template( 'galery.html' )
+    if is_page:
+        return data_response, http_status    
+    else:
+        return jsonify(data_response), http_status
 
 # ===============================================================================
 # Favicon

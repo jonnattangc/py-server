@@ -57,14 +57,20 @@ class Page :
         data_response = {"message" : "No autorizado", "code": 401, "data": None}
         http_code  = 401
         json_data = None
+        is_page: bool = False
 
         logging.info("Reciv " + str(request.method) + " Contex: /page/" + str(subpath) )
         logging.info("Reciv Data: " + str(request.data) )
         logging.info("Reciv Header :\n" + str(request.headers) )
 
-        rx_api_key = request.headers.get('x-api-key')
+        rx_api_key = None 
+        try :
+            rx_api_key = request.headers.get('x-api-key')
+        except Exception as e :
+            rx_api_key = None
+        
         if str(rx_api_key) != str(self.api_key) :
-            return  data_response, http_code
+            return  data_response, http_code, is_page
         
         request_data = None 
         request_type = None
@@ -181,6 +187,10 @@ class Page :
                     http_code = 200
                 del cxp
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
+            elif subpath.find('csrf') >=0 :
+                is_page = True
+                data_response = render_template( 'galery.html' )
+                http_code  = 200
             elif subpath.find('status') >=0 :
                 check = Checker()
                 data, http_code = check.get_status_pages()
@@ -188,11 +198,16 @@ class Page :
                     data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
                 else : 
                     data_response = {"message" : "ERROR", "code": -1, "data": None }
-            else :
+            elif subpath.find('web') >=0 :
+                # Pagina Web
+                data_response = render_template( 'create.html' )
+                http_code  = 200
+                is_page = True
+            else: 
                 data_response = {"message" : "Servicio GET no encontrado", "code": 404, "data": None}
                 http_code  = 404
 
-        return  data_response, http_code
+        return  data_response, http_code, is_page
 
 
     def memorize_process( self, json_data, action: str ) :
