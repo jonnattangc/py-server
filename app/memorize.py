@@ -16,7 +16,7 @@ class Memorize() :
     host = os.environ.get('HOST_BD','None')
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
-    database = 'proxy'
+    database = 'gral-purpose'
 
     def __init__(self) :
         try:
@@ -40,18 +40,18 @@ class Memorize() :
     def isConnect(self) :
         return self.db != None
     # ==============================================================================
-    def state(self) :
+    def get_states(self) :
         names = []
         states = []
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """select * from proxy where client = %s"""
+                sql = """select * from game_states where client = %s"""
                 cursor.execute(sql, ('ionix-day'))
                 results = cursor.fetchall()
                 for row in results:
-                    state = str(row['environment'])
-                    name = str(row['name'])
+                    state = str(row['state'])
+                    name = str(row['name_state'])
                     states.append(state)
                     names.append(name)
                     # logging.info("Rescato card: " + name + " estado: " + state )
@@ -66,7 +66,7 @@ class Memorize() :
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """UPDATE proxy set environment=%s where client=%s"""
+                sql = """UPDATE game_states set state=%s where client=%s"""
                 cursor.execute(sql, ('down', 'ionix-day'))
                 self.db.commit()
                 msg = 'Servicio Ejecutado exitosamente'
@@ -86,7 +86,7 @@ class Memorize() :
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """UPDATE proxy set environment=%s where client=%s and name=%s"""
+                sql = """UPDATE game_states set state=%s where client=%s and name_state=%s"""
                 cursor.execute(sql, (state, 'ionix-day', card ))
                 self.db.commit()
                 code = 200

@@ -69,7 +69,7 @@ class Page :
         except Exception as e :
             rx_api_key = None
         
-        if str(rx_api_key) != str(self.api_key) :
+        if (rx_api_key == None or str(rx_api_key) != str(self.api_key)) and (subpath.find("web") < 0 and subpath.find("csrf") < 0) :
             return  data_response, http_code, is_page
         
         request_data = None 
@@ -98,7 +98,7 @@ class Page :
         else: 
                 json_data = data_rx
 
-        logging.info("JSON: " + str(json_data) )
+        logging.info("Payload body: " + str(json_data) )
 
         if request.method == 'POST' :
             if str(subpath).find('hook') >= 0 :
@@ -159,7 +159,9 @@ class Page :
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('memorize/') >= 0 :
                 action = str(subpath).replace('memorize/', '')
+                logging.info('Data ACTION: ' + str(action) )
                 data, http_code = self.memorize_process(json_data, action)
+                logging.info('Data MEMO: ' + str(data) )
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             elif str(subpath).find('image/') >= 0 :
                 name_file = str(subpath).replace('image/', '')
@@ -187,10 +189,6 @@ class Page :
                     http_code = 200
                 del cxp
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
-            elif subpath.find('csrf') >=0 :
-                is_page = True
-                data_response = render_template( 'galery.html' )
-                http_code  = 200
             elif subpath.find('status') >=0 :
                 check = Checker()
                 data, http_code = check.get_status_pages()
@@ -200,7 +198,7 @@ class Page :
                     data_response = {"message" : "ERROR", "code": -1, "data": None }
             elif subpath.find('web') >=0 :
                 # Pagina Web
-                data_response = render_template( 'create.html' )
+                data_response = render_template( 'create.html', rut='132334-rree-k' )
                 http_code  = 200
                 is_page = True
             else: 
@@ -224,7 +222,8 @@ class Page :
             del memo
         if action.find('states') >= 0 :
             memo = Memorize()
-            names, estados = memo.state()
+            names, estados = memo.get_states()
+            logging.info('NAMES: ' + str(names) )
             del memo
             states = []
             i = 0

@@ -3,6 +3,8 @@ try:
     import sys
     import os
     import time
+    import hashlib
+    import json
     import requests
     import pymysql.cursors
     from datetime import datetime, timedelta
@@ -19,7 +21,6 @@ class Sserpxelihc() :
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
     database = 'proxy'
-    environment = None
 
     def __init__(self) :
         try:
@@ -43,21 +44,33 @@ class Sserpxelihc() :
     def isConnect(self) :
         return self.db != None
 
-    def getEnv(self) :
-        name = None
+    def get_config(self) :
+        config = {}
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """select * from proxy where client = %s"""
-                cursor.execute(sql, ('chilexpress'))
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from proxy.proxy p inner join proxy.keys k on p.environment = k.environment where p.client = 'chilexpress'"""
+                cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results:
-                    self.environment = str(row['environment'])
-                    name = str(row['name'])
+                    config = {
+                        'environment': str(row['environment']),
+                        'request' : str(row['request']),
+                        'response' : str(row['response']),
+                        'enabled' : bool(row['enabled']),
+                        'hash' : str(row['hash']),
+                        'id' : int(row['id']),
+                        'cov': str(row['coverage_key']),
+                        'ot' : str(row['ot_key']),
+                        'geo' : str(row['geo_key']),
+                        'url' : str(row['base_url'])
+                    }
+                    break
         except Exception as e:
             print("ERROR BD:", e)
-        logging.info("Rescato ambiente de " + name + ": " + self.environment )
-        return self.environment
+            config = {}
+        logging.info("Configuracion para ambiente de [" + str(config) + "]" )
+        return config
 
     def saveEnv(self, env) :
         success = False
@@ -80,32 +93,49 @@ class Sserpxelihc() :
             logging.info('Error cambiando ambiente, puede ser que sea el mismo que ya existia')
         return current, success
 
+    def saveCache(self, request: str, hash: str, response: str, id: int ) :
+        success = False
+        try :
+            if self.isConnect() :
+                cursor = self.db.cursor()
+                sql = """UPDATE proxy set request=%s, response=%s, hash=%s where id=%s"""
+                cursor.execute(sql, (request, response, hash, id))
+                self.db.commit()
+                success = True
+                logging.info('Cache actualizado con exito')
+        except Exception as e:
+            print("ERROR BD saveCache():", e)
+            self.db.rollback()
+
+    def get_key_by_path(self, congig: dict, path: str) :
+        key = ''
+        if path.find('rating/') >= 0 or path.find('Rating/') >= 0 :
+            key = congig['cov']
+        if path.find('transport-orders/') >= 0  :
+            key = congig['ot']
+        if path.find('georeference/') >= 0  :
+            key = congig['geo']
+        return key
+
     def requestProcess(self, request, subpath ) :
+            logging.info("================================================================================================================" )
             logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
-            logging.info("Reciv Header : " + str(request.headers) )
+            #logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
-            currentEnv = self.getEnv()
-
-            url = 'https://devservices.wschilexpress.com/' + str(subpath)
-            key = 'cfa9de51f151482b98477655dc346443'
-
-            if( currentEnv.find('test') >= 0 ) :
-                url = 'https://testservices.wschilexpress.com/' + str(subpath)
-                if( subpath.find('rating/') >= 0 or subpath.find('Rating/') >= 0 ) :
-                    key = 'fd46aa18a9fe44c6b49626692605a2e8'
-                if( subpath.find('transport-orders/') >= 0 ) :
-                    key = '0112f48125034f8fa42aef2441773793'
-
-            if( currentEnv.find('qa') >= 0 ) :
-                url = 'https://qaservices.wschilexpress.com/' + str(subpath)
-                if( subpath.find('rating/') >= 0 or subpath.find('Rating/') >= 0 ) :
-                    key = 'f25fbe75153b4f8e908e11fb5c958a1d'
-                    #key = 'fd46aa18a9fe44c6b49626692605a2e8'
-                if( subpath.find('transport-orders/') >= 0  ) :
-                    key = '5a77a19b76a24297ba01c158286641b7'
-                if( subpath.find('georeference/') >= 0  ) :
-                    key = 'a6979b4160c6465f85776f43b6c40ffb'
-                    #key = '134b01b545bc4fb29a994cddedca9379'
+            config = self.get_config()
+            url = config['url'] + str(subpath)
+            key = self.get_key_by_path(config, subpath)
+            # si est'a habilitado el cache, se compara el hash
+            if( config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 ) :   
+                logging.info("Cache habilitado, se compara el hash " ) 
+                hash : str = str(hashlib.md5(request.data).hexdigest())
+                if hash != None and hash == config['hash'] :
+                    data_response = config['response']
+                    json_data = json.dumps(data_response)
+                    logging.info("Se responde el cache OK: " + json.loads(json_data) ) 
+                    return json.loads(json_data), 200
+                else: 
+                    logging.info("No se responde el cache, se sigue !! " )
 
             headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
             # valores por defecto
@@ -142,17 +172,19 @@ class Sserpxelihc() :
                     resp = requests.get(url, data = request.data, headers = headers, timeout = 40)
                     diff = time.monotonic() - m1;
                 errorCode = resp.status_code
-
-                logging.info("================================================" )
-                logging.info("Environment : " + str(currentEnv) )
-                logging.info("Key : " + key )
+                logging.info("Key         : " + str(key) )
                 
                 if( resp.status_code == 200 ) :
                     data_response = resp.json()
-                    logging.info("Response CXP OK" + str( data_response ) )
+                    logging.info("Response CXP OK: " + str( data_response ) )
+                    # se actualiza en la BD s'olo si esta habilitado
+                    if config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 :
+                        hash : str = str(hashlib.md5(request.data).hexdigest())
+                        self.saveCache( str(request.get_json()), hash, str(data_response), config['id'] )
+
                 else :
                     data_response = resp.json()
-                    logging.info("Response CXP NOK" + str( data_response ) )
+                    logging.info("Response CXP NOK[" + str(resp.status_code) + "]: " + str( data_response ) )
 
                 logging.info("Time Response in " + str(diff) + " sec." )
 
