@@ -22,6 +22,7 @@ try:
     from ucc import Ucc
     from pageprocessor import Page
     from sserpxelihc import Sserpxelihc
+    from irelez import Irelez
 
 except ImportError:
 
@@ -244,6 +245,14 @@ def process_cxp( subpath ):
     del cxp
     return data_response, http_code
 
+
+@app.route('/zlr/<path:subpath>', methods=['GET','POST','PUT'])
+@csrf.exempt
+def process_zlr( subpath ):
+    zlr = Irelez()
+    data_response, http_code = zlr.requestProcess(request, str(subpath))
+    del zlr
+    return data_response, http_code
 
 @app.get('/page/image/<path:subpath>')
 def process_image( subpath ):
