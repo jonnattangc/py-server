@@ -60,7 +60,7 @@ class Page :
         is_page: bool = False
 
         logging.info("Reciv " + str(request.method) + " Contex: /page/" + str(subpath) )
-        logging.info("Reciv Data: " + str(request.data) )
+        # logging.info("Reciv Data: " + str(request.data) )
         logging.info("Reciv Header :\n" + str(request.headers) )
 
         rx_api_key = None 
@@ -70,6 +70,7 @@ class Page :
             rx_api_key = None
         
         if (rx_api_key == None or str(rx_api_key) != str(self.api_key)) and (subpath.find("web") < 0 and subpath.find("csrf") < 0) :
+            logging.error("API-Key No autorizada, Rx: " + str(rx_api_key) )
             return  data_response, http_code, is_page
         
         request_data = None 
@@ -98,7 +99,7 @@ class Page :
         else: 
                 json_data = data_rx
 
-        logging.info("Payload body: " + str(json_data) )
+        logging.info("Payload Rx: " + str(json_data) )
 
         if request.method == 'POST' :
             if str(subpath).find('hook') >= 0 :

@@ -108,39 +108,43 @@ class AwsUtil() :
         data = {'ref': 'Servicio Ejecutado exitosamente'}
         code = 200
         m1 = time.monotonic_ns()
+        file_path : str = None
         try :
             request_data = request.get_json()
             name_file = str(request_data['name'])
-            name_file = 'photos/' + str(uuid.uuid4()) + '-' + name_file
+            tmp_name_file : str = str(uuid.uuid4()) + '-' + name_file
+            s3_name_file : str = 'photos/' + tmp_name_file
 
             data = str(request_data['data'])
             data = data.replace('data:image/png;base64,','')
 
-            name = 'test.png'
-            file_path = os.path.join(self.root, 'static')
-            file_path = os.path.join(file_path, 'images')
-            file_path = os.path.join(file_path, str(name))
+            # file_path = os.path.join(self.root, 'static')
+            # file_path = os.path.join(file_path, 'images')
+            file_path = os.path.join('/tmp/', str(tmp_name_file))
 
             file = open(file_path, 'wb')
             file.write( base64.b64decode((data) ))
             file.close()
 
             logging.info('[S3] Archivo a subir: ' + str(file_path))
-            logging.info('[S3] Nombre: ' + str(name_file))
+            logging.info('[S3] Nombre: ' + str(s3_name_file))
             
             s3_bucket = self.s3_resource.Bucket(name=self.bucket_name)
-            s3_bucket.upload_file( Filename=file_path, Key=name_file )
+            s3_bucket.upload_file( Filename=file_path, Key=s3_name_file )
             data = { 
-                'url': str(self.url_base) + str(self.bucket_name) + '/' + str(name_file),
+                'url': str(self.url_base) + str(self.bucket_name) + '/' + str(s3_name_file),
                 'msg': 'Servicio ejecutado exitosamente',
                 'code': 0
             }
-
 
         except Exception as e:
             print("[S3] ERROR AWS:", e)
             code = 403
             data = { 'ref': 'Error: ' + str(e) }
+
+        # se borra el archivo temporal
+        if os.path.exists(file_path):
+            os.remove(file_path)    
 
         diff = time.monotonic_ns() - m1
         logging.info("[S3] Servicio Ejecutado en " + str(diff) + " nsec." )
