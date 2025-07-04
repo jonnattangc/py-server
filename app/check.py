@@ -22,7 +22,7 @@ class Checker() :
     password = os.environ.get('PASS_BD','None')
     api_key = os.environ.get('API_KEY_ROBOT_UPTIME','None')
 
-    database = 'security'
+    database = 'gral-purpose'
 
     def __init__(self) :
         try:
