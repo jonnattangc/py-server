@@ -17,39 +17,34 @@ except ImportError:
 
 class Irelez() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None')
-    password = os.environ.get('PASS_BD','None')
-    database = 'proxy'
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
         except Exception as e :
-            print("ERROR BD:", e)
+            print("ERROR __init__:", e)
             self.db = None
 
     def __del__(self):
         if self.db != None:
             self.db.close()
 
-    def connect( self ) :
-        try:
-            if self.db == None :
-                self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
-        except Exception as e :
-            print("ERROR BD:", e)
-            self.db = None
-
-    def isConnect(self) :
+    def is_connect(self) :
         return self.db != None
 
     def get_config(self) :
         config = {}
         try :
-            if self.isConnect() :
+            if self.is_connect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from proxy.proxy p inner join proxy.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'zeleri'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'zeleri'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results:
@@ -76,7 +71,7 @@ class Irelez() :
         success = False
         current = self.getEnv()
         try :
-            if self.isConnect() and self.environment != env:
+            if self.is_connect() and self.environment != env:
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set environment=%s where client=%s"""
                 cursor.execute(sql, (env,'chilexpress'))
@@ -96,7 +91,7 @@ class Irelez() :
     def saveCache(self, request: str, hash: str, response: str, id: int ) :
         success = False
         try :
-            if self.isConnect() :
+            if self.is_connect() :
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set request=%s, response=%s, hash=%s where id=%s"""
                 cursor.execute(sql, (request, response, hash, id))
@@ -121,7 +116,7 @@ class Irelez() :
             key = congig['geo']
         return key
 
-    def requestProcess(self, request, subpath ) :
+    def request_process(self, request, subpath ) :
             logging.info("========================================== /ZLR =============================================================" )
             logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
             logging.info("Reciv Header : " + str(request.headers) )

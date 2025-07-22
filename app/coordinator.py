@@ -5,7 +5,6 @@ try:
     import sys
     import os
     import requests
-    import pymysql.cursors
     import time
     import json
     from datetime import datetime, timedelta
@@ -24,23 +23,16 @@ class Coordinator() :
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
     token_bearer = os.environ.get('BEARER_MIDDLEWARE','None')
-    database = 'deposits'
     # URL notificacion a middleware IONIX
-    url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/' + database
+    url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/deposits'
 
     transbot_id = -1
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
             self.transbot_id = int(os.environ.get('TRANSBOT_ID','-1'))
         except Exception as e :
-            print("ERROR BD:", e)
-            self.db = None
-
-    def __del__(self):
-        if self.db != None:
-            self.db.close()
+            print("ERROR __init__:", e)
 
     # Evalua la fecha de 
     def getEvaluateDates(self, id_bank ) :
@@ -76,7 +68,7 @@ class Coordinator() :
         }
         return data
 
-    def notifyMiddleware( self, deposit, account, id_bank ) : 
+    def notify_middleware( self, deposit, account, id_bank ) : 
         request_tx = {
             'data': {
                 'transbotID'    : self.transbot_id,
@@ -102,44 +94,16 @@ class Coordinator() :
             logging.info("Response : " + str( data_response ) )
 
     # Procesa dato que llega desde Bot
-    def processUpdate(self, deposit_bank_name, deposit_bank_account, deposit_bank_internal_id, deposits ) :
+    def process_update(self, deposit_bank_name, deposit_bank_account, deposit_bank_internal_id, deposits ) :
         logging.info('Cuenta [' + deposit_bank_internal_id + '] del ' + deposit_bank_name + ' N°: ' + deposit_bank_account )
         status = 'success'
         for deposit in deposits :
             logging.info('Deposito ' + str(deposit) )
             cursor = self.db.cursor()
             data = Deposit( deposit )
-            try:
-                sql = """select count(*) as count from deposit where identity = %s"""
-                cursor.execute(sql, (deposit['identity']))
-                results = cursor.fetchall()
-                count = 0
-                for row in results:
-                    count = int(str(row['count']))
-
-                if count == 0 :
-                    sql = """INSERT INTO deposit (amount, origin_name, transbot_id, origin_bank, destination_bank, origin_account, destination_account, 
-                        date_information, create_at, update_at, `identity`, internal_bot_process, channel, origin_rut, 
-                                                destination_rut, description, balance, comment, type )
-                                                VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                    now = datetime.now()
-                    cursor.execute(sql, (data.amount, data.origin_name, self.transbot_id, data.origin_bank,deposit_bank_name, data.origin_account, deposit_bank_account, 
-                        data.date_registry, now.strftime("%Y/%m/%d %H:%M:%S"), now.strftime("%Y/%m/%d %H:%M:%S"), data.identity, data.internal_bot_process, data.channel, data.origin_rut,
-                        data.destination_rut, data.description, data.balance, data.comment, data.type_mov ) )
-                    self.db.commit()
-                    self.notifyMiddleware( data, deposit_bank_account, deposit_bank_internal_id )
-                else :
-                    print("Existen: " + str(count) + " tuplas con el id: " + data.identity )
-                
-                del data
-            except Exception as e:
-                print("ERROR BD:", e)
-                status = 'error'
-                self.db.rollback()
-
-        return  {
-                    "status": str(status)
-                }
+            self.notify_middleware( data, deposit_bank_account, deposit_bank_internal_id )
+            del data
+        return  {"status": str(status)}
 
     def proccess_solicitude( self, request , subpath : str) :
         m1 = time.monotonic_ns()
@@ -158,7 +122,7 @@ class Coordinator() :
                 name, account = banks.getBank( id_bank )
                 del banks
                 if name != None and account != None :
-                    dataTx = self.processUpdate( str(name), str(account), id_bank, request_data['deposits'] )
+                    dataTx = self.process_update( str(name), str(account), id_bank, request_data['deposits'] )
                 else: 
                     dataTx =  {
                         "status": "error"

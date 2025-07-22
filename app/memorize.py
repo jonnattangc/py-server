@@ -13,14 +13,17 @@ except ImportError:
 
 class Memorize() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None')
-    password = os.environ.get('PASS_BD','None')
-    database = 'gral-purpose'
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None

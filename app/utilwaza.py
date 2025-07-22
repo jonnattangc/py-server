@@ -20,14 +20,10 @@ except ImportError:
 
 class UtilWaza() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None') 
-    password = os.environ.get('PASS_BD','None')
     waza_token = os.environ.get('WAZA_BEARER_TOKEN','None')
     waza_phone_id = os.environ.get('PHONE_ID','None')
     waza_api_version = os.environ.get('WAZA_API_VERSION','None')
     uuid = os.environ.get('UUID_WZ','None')
-    database = 'gral-purpose'
     environment = None
     bearer_token = 'Bearer ' + str(waza_token)
     headers = None
@@ -36,7 +32,14 @@ class UtilWaza() :
     def __init__(self, root = './'):
         self.root = root
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
             self.headers = {'Content-Type': 'application/json', 'Authorization': str(self.bearer_token) }
         except Exception as e :
             print("ERROR BD:", e)
@@ -693,10 +696,9 @@ class UtilWaza() :
                 }
             }
             # logging.info("Request Trx " + str(data_json) )
-            url = 'https://graph.facebook.com/v17.0/107854109079987/messages'
+            url = 'https://graph.facebook.com/v18.0/303918009478174/messages'
             logging.info("URL : " + url )
             response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
-            data_response = response.json()
             if response.status_code != None :
                 code = response.status_code
                 if response.status_code == 200 :
@@ -707,10 +709,12 @@ class UtilWaza() :
                         'channel' : 'whatsapp',
                         'duration_min': str(duration)
                     }
+                else :
+                    logging.info("Response Code: " + str( response.status_code ) )
         except Exception as e:
             print("ERROR SENT OTP:", e)
 
-        return jsonify(data), code
+        return data, code
 
     def validateOtp(self, data_rx ) :
         reference = str(data_rx['reference'])

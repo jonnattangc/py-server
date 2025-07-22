@@ -195,8 +195,11 @@ class Page :
                 data, http_code = check.get_status_pages()
                 if http_code == 200 : 
                     data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
+                    data_bd = check.get_info()
+                    logging.info("### Status BD: " + str(data_bd) )
                 else : 
                     data_response = {"message" : "ERROR", "code": -1, "data": None }
+                del check
             elif subpath.find('web') >=0 :
                 # Pagina Web
                 data_response = render_template( 'create.html', rut='132334-rree-k' )

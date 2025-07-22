@@ -17,16 +17,20 @@ ROOT_DIR = os.path.dirname(__file__)
 
 class Deposits() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None')
-    password = os.environ.get('PASS_BD','None')
-    database = 'deposits'
     transbot_id = '1'
     
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
+
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None
@@ -34,18 +38,6 @@ class Deposits() :
     def __del__(self):
         if self.db != None:
             self.db.close()
-
-    def connect( self ) :
-        try:
-            if self.db == None :
-                self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
-        except Exception as e :
-            print("ERROR BD:", e)
-            self.db = None
-
-    def isConnect(self) :
-        return self.db != None
-
     def save( self, amount, name, identity, origin_bank, origin_account, date, destination_bank, destination_account ) :
         try :
             if self.db != None :

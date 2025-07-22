@@ -188,6 +188,7 @@ def proccess_ucc( subpath ):
 @csrf.exempt
 def wazasp( ):
     waza = UtilWaza( ROOT_DIR )
+    logging.info("####### Reciv Data: " + str(request.data) )
     msg, code = waza.requestProcess(request, None)
     del waza
     return msg, code
@@ -250,7 +251,7 @@ def process_cxp( subpath ):
 @csrf.exempt
 def process_zlr( subpath ):
     zlr = Irelez()
-    data_response, http_code = zlr.requestProcess(request, str(subpath))
+    data_response, http_code = zlr.request_process(request, str(subpath))
     del zlr
     return data_response, http_code
 

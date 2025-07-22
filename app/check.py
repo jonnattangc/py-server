@@ -17,16 +17,19 @@ except ImportError:
 
 class Checker() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None')
-    password = os.environ.get('PASS_BD','None')
-    api_key = os.environ.get('API_KEY_ROBOT_UPTIME','None')
-
-    database = 'gral-purpose'
+    api_key_robot : str = None
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            self.api_key_robot = str(os.environ.get('API_KEY_ROBOT_UPTIME', ''))
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None
@@ -35,24 +38,34 @@ class Checker() :
         if self.db != None:
             self.db.close()
 
-    def isConnect(self) :
-        return self.db != None
+    def is_connect(self) :
+        if  self.db != None :
+            try :
+                logging.info('Se ha conectado a la BD') 
+                cursor = self.db.cursor()
+                sql = """select version() as version"""
+                cursor.execute(sql, ())
+                results = cursor.fetchall()
+                for row in results:
+                    version = row['version']
+                    logging.info('Version BD: ' + str(version))
+                cursor.close()
+                return True
+            except Exception as e:
+                print("ERROR is_connect():", e)
+        return False
 
-    def getInfo(self) :
+    def get_info(self) :
         m1 = time.monotonic()
         logging.info("Check Status All Components" )
-        status_bd = self.isConnect()
+        status_bd = self.is_connect()
 
         banks = Banks( filename='bank/banks' )
         data = banks.json_banks
         del banks
         time_response = time.monotonic() - m1
         data = {
-            'Server'    : 'dev.jonnattan.com',
-            'Owner'     : 'Jonnattan Griffiths Catalan',
-            'Linkedin'  : 'https://www.linkedin.com/in/jonnattan',
-            'Web'       : 'https://dev.jonnattan.com',
-            'Files'     : data != None,
+            'Bancks'    : data ,
             'Data Base' : status_bd,
             'Time'      : time_response
         }
@@ -64,7 +77,7 @@ class Checker() :
         code = 402
         try :
             data_json = {
-                'api_key' : str(self.api_key)
+                'api_key' : str(self.api_key_robot)
             }
             headers = {'Content-Type': 'application/json'}
             # logging.info("Request Trx " + str(data_json) )

@@ -17,14 +17,19 @@ except ImportError:
 
 class Sserpxelihc() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None')
-    password = os.environ.get('PASS_BD','None')
-    database = 'proxy'
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
+            
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None
@@ -49,7 +54,7 @@ class Sserpxelihc() :
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from proxy.proxy p inner join proxy.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'chilexpress'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'chilexpress'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results:
@@ -67,7 +72,7 @@ class Sserpxelihc() :
                     }
                     break
         except Exception as e:
-            print("ERROR BD:", e)
+            print("ERROR BD get_config():", e)
             config = {}
         logging.info("Configuracion para ambiente de [" + str(config) + "]" )
         return config
@@ -123,6 +128,7 @@ class Sserpxelihc() :
             #logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
             config = self.get_config()
+            logging.info("######## Config: " + str(config) )
             url = config['url'] + str(subpath)
             key = self.get_key_by_path(config, subpath)
             # si est'a habilitado el cache, se compara el hash
