@@ -10,8 +10,8 @@ try:
     import pymysql.cursors
     from datetime import datetime
     from otp import Otp
-    from utilchatbot import UtilChatbot
     from flask import jsonify
+    from utilllm import UtilLlm
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[UtilWaza] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -295,9 +295,11 @@ class UtilWaza() :
                 response = 'Hola ' + str(user) + '. Para iniciar el proceso primero toma una fotografia clara y nitida del frente de tu Carnet de Identidad'
                 self.initValidate( user, number )
             else :
-                chat = UtilChatbot()
+                chat = UtilLlm()
                 response = chat.sendQuestion(text_rx)
                 response = response.replace('Hola', ('Hola ' + str(user)))
+                response = response.replace('* ','-')
+                response = response.replace('*','')
                 del chat
             self.saveMsgs( text_rx, response, user, number )
         except Exception as e:
@@ -323,13 +325,17 @@ class UtilWaza() :
             print("ERROR Mark(): ", e)
         
     def responseTextMessage(self, phone_number, msg_id, msg_tx, number_id ) :
+        texto: str = str(msg_tx)
+        if len(str(msg_tx)) > 4090 :
+            texto = str(msg_tx)[0:4090] + '...'
+
         data_json = {
             'messaging_product' : 'whatsapp',
             'recipient_type'    : 'individual',
             'to'                : str(phone_number),
             'context'           : { 'message_id': str(msg_id) }, 
             'type'              : 'text',
-            'text'              : { 'preview_url': False, 'body': str(msg_tx), }
+            'text'              : { 'preview_url': False, 'body': str(texto), }
         }
         url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(number_id) + '/messages'
         try :

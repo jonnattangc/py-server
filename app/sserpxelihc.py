@@ -123,12 +123,12 @@ class Sserpxelihc() :
         return key
 
     def requestProcess(self, request, subpath ) :
-            logging.info("================================================================================================================" )
+            logging.info("===================================== INIT ==========================================================" )
             logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
             #logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
             config = self.get_config()
-            logging.info("######## Config: " + str(config) )
+            #logging.info("######## Config: " + str(config) )
             url = config['url'] + str(subpath)
             key = self.get_key_by_path(config, subpath)
             # si est'a habilitado el cache, se compara el hash
@@ -196,5 +196,6 @@ class Sserpxelihc() :
 
             except Exception as e:
                 print("ERROR POST:", e)
-
+            
+            logging.info("===================================== END ==========================================================" )
             return data_response, errorCode

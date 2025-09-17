@@ -23,6 +23,7 @@ try:
     from pageprocessor import Page
     from sserpxelihc import Sserpxelihc
     from irelez import Irelez
+    from utilmail import MailProcess
 
 except ImportError:
 
@@ -202,6 +203,17 @@ def gran_logia_process(subpath):
     gl = GranLogia( ROOT_DIR )
     data, code = gl.request_process( request, subpath )
     del gl
+    return data, code
+
+# ==============================================================================
+# Procesa peticiones de la pagina de la logia
+# ==============================================================================
+@app.route('/mail/<path:subpath>', methods=['POST', 'GET'])
+@csrf.exempt
+def mail_process(subpath):
+    mp = MailProcess(  )
+    data, code = mp.request_process( request, subpath )
+    del mp
     return data, code
 
 # ==============================================================================

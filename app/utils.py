@@ -113,8 +113,10 @@ class Cipher() :
     cipher = None
     aes_key = None
     iv = b'1234567890123456'
-    def __init__(self, ) :
+    def __init__(self, aes_key: str = None) :
         key = os.environ.get('AES_KEY','None')
+        if aes_key != None :
+            key = aes_key
         self.aes_key = key.encode('utf-8')[:32]
 
     def __del__(self):
