@@ -306,6 +306,29 @@ class UtilWaza() :
             print("ERROR Fabricando Respuesta:", e)
         return response
 
+    def processTextMessage( self, request_data ) :
+        response = {
+            'success' : False,
+            'result' : ''
+        }
+        code = 500
+        try :
+            if request_data != None :
+                chat = UtilLlm()
+                resp = chat.sendQuestion(request_data['mesagge'])
+                resp = resp.replace('* ','-')
+                resp = resp.replace('*','')
+                response['result'] = resp
+                response['success'] = True
+                code = 200
+                del chat
+            else :
+                return None
+        except Exception as e:
+            print("ERROR processTextMessage():", e)
+            return None
+        return response, code
+
     def markasReader( self, msg_id, number_id ) :
         data_read_json = {
             'messaging_product' : 'whatsapp',
@@ -763,6 +786,8 @@ class UtilWaza() :
                             data_response, errorCode = self.validateOtp( request_data )
                         elif str(subpath) == 'marketing' :
                             data_response, errorCode = self.processMarketingMessage( request_data )
+                        elif str(subpath) == 'message' :
+                            data_response, errorCode = self.processTextMessage( request_data )
                         else :
                             data_response = jsonify({'statusCode': 404, 'statusDescription': 'Servicio no encontrado' })
                             errorCode = 404

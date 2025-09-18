@@ -187,10 +187,17 @@ def proccess_ucc( subpath ):
 # ==============================================================================
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
-def wazasp( ):
+def wazasp_1( ):
+    return process_waze_msg( None )
+
+@app.route('/waza/<path:subpath>', methods=['POST','GET','PUT'])
+@csrf.exempt
+def wazasp_2( subpath: str ):
+    return process_waze_msg( subpath )
+
+def process_waze_msg( subpath: str ) :
     waza = UtilWaza( ROOT_DIR )
-    logging.info("####### Reciv Data: " + str(request.data) )
-    msg, code = waza.requestProcess(request, None)
+    msg, code = waza.requestProcess(request, subpath)
     del waza
     return msg, code
 
