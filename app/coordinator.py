@@ -5,7 +5,8 @@ try:
     import sys
     import os
     import requests
-    import pymysql.cursors
+    import time
+    import json
     from datetime import datetime, timedelta
     from utils import Banks
 except ImportError:
@@ -22,23 +23,16 @@ class Coordinator() :
     user = os.environ.get('USER_BD','None')
     password = os.environ.get('PASS_BD','None')
     token_bearer = os.environ.get('BEARER_MIDDLEWARE','None')
-    database = 'deposits'
     # URL notificacion a middleware IONIX
-    url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/' + database
+    url_notification = str(os.environ.get('NOTIFICATION_URL','None')) + '/deposits'
 
     transbot_id = -1
 
     def __init__(self) :
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
             self.transbot_id = int(os.environ.get('TRANSBOT_ID','-1'))
         except Exception as e :
-            print("ERROR BD:", e)
-            self.db = None
-
-    def __del__(self):
-        if self.db != None:
-            self.db.close()
+            print("ERROR __init__:", e)
 
     # Evalua la fecha de 
     def getEvaluateDates(self, id_bank ) :
@@ -74,7 +68,7 @@ class Coordinator() :
         }
         return data
 
-    def notifyMiddleware( self, deposit, account, id_bank ) : 
+    def notify_middleware( self, deposit, account, id_bank ) : 
         request_tx = {
             'data': {
                 'transbotID'    : self.transbot_id,
@@ -100,48 +94,23 @@ class Coordinator() :
             logging.info("Response : " + str( data_response ) )
 
     # Procesa dato que llega desde Bot
-    def processUpdate(self, deposit_bank_name, deposit_bank_account, deposit_bank_internal_id, deposits ) :
+    def process_update(self, deposit_bank_name, deposit_bank_account, deposit_bank_internal_id, deposits ) :
         logging.info('Cuenta [' + deposit_bank_internal_id + '] del ' + deposit_bank_name + ' N°: ' + deposit_bank_account )
         status = 'success'
         for deposit in deposits :
             logging.info('Deposito ' + str(deposit) )
             cursor = self.db.cursor()
             data = Deposit( deposit )
-            try:
-                sql = """select count(*) as count from deposit where identity = %s"""
-                cursor.execute(sql, (deposit['identity']))
-                results = cursor.fetchall()
-                count = 0
-                for row in results:
-                    count = int(str(row['count']))
+            self.notify_middleware( data, deposit_bank_account, deposit_bank_internal_id )
+            del data
+        return  {"status": str(status)}
 
-                if count == 0 :
-                    sql = """INSERT INTO deposit (amount, origin_name, transbot_id, origin_bank, destination_bank, origin_account, destination_account, 
-                        date_information, create_at, update_at, `identity`, internal_bot_process, channel, origin_rut, 
-                                                destination_rut, description, balance, comment, type )
-                                                VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                    now = datetime.now()
-                    cursor.execute(sql, (data.amount, data.origin_name, self.transbot_id, data.origin_bank,deposit_bank_name, data.origin_account, deposit_bank_account, 
-                        data.date_registry, now.strftime("%Y/%m/%d %H:%M:%S"), now.strftime("%Y/%m/%d %H:%M:%S"), data.identity, data.internal_bot_process, data.channel, data.origin_rut,
-                        data.destination_rut, data.description, data.balance, data.comment, data.type_mov ) )
-                    self.db.commit()
-                    self.notifyMiddleware( data, deposit_bank_account, deposit_bank_internal_id )
-                else :
-                    print("Existen: " + str(count) + " tuplas con el id: " + data.identity )
-                
-                del data
-            except Exception as e:
-                print("ERROR BD:", e)
-                status = 'error'
-                self.db.rollback()
-
-        return  {
-                    "status": str(status)
-                }
-
-    def proccessSolicitude( self, req , paths ) :
+    def proccess_solicitude( self, request , subpath : str) :
+        m1 = time.monotonic_ns()
         dataTx = {}
-        if len(paths) >= 3 :
+        http_code = 200
+        paths = subpath.split('/')
+        if len(paths) >= 3 and subpath.find('dreams') < 0 :
             logging.info('paths[2]: ' + str(paths[2]) )
             if paths[2].find('bank_dates') >= 0 :
                 id = req.args.get('id', '-1')
@@ -153,7 +122,7 @@ class Coordinator() :
                 name, account = banks.getBank( id_bank )
                 del banks
                 if name != None and account != None :
-                    dataTx = self.processUpdate( str(name), str(account), id_bank, request_data['deposits'] )
+                    dataTx = self.process_update( str(name), str(account), id_bank, request_data['deposits'] )
                 else: 
                     dataTx =  {
                         "status": "error"
@@ -164,7 +133,90 @@ class Coordinator() :
                 dataTx =  {
                     "status": "success"
                 }
-        return dataTx
+        else :
+            if subpath.find('dreams') >= 0 :
+                #logging.info("################ DREAMS Reciv Action: " + str(subpath) )
+                #logging.info("Reciv H : " + str(request.headers) )
+                #logging.info("Reciv D: " + str(request.data) )
+                m1 = time.monotonic()
+                diff = 0
+                request_data = request.get_json()
+                url = os.environ.get('SLACK_NOTIFICATION','None')
+                headers = {'Content-Type': 'application/json'}
+                response = None
+                request_tx = {}
+
+                if str(subpath).find('deposito') >= 0 :
+                    monto = str(request_data['amount'])
+                    fecha = str(request_data['date'])
+                    name = str(request_data['name'])
+                    rut = str(request_data['identity'])
+                    bank = str(request_data['bank'])
+                    account = str(request_data['account'])
+                    code = str(request_data['code'])
+
+                    request_tx = {
+                            'username': 'OJO: Notificación de depósito',
+                            'text': 'Deposito de $' + monto + ' recibido a las ' + fecha,
+                            'attachments': [
+                                {
+                                    'fallback'      : 'Nuevo deposito',
+                                    'pretext'       : 'Datos de Origen',
+                                    'text'          : 'Nombre: ' + name,
+                                    'color'         : 'good',
+                                    'fields'        : [
+                                        {
+                                            'title': 'Rut',
+                                            'value': rut,
+                                            'short': True
+                                        },{
+                                            'title': 'Banco',
+                                            'value': bank,
+                                            'short': True
+                                        },{
+                                            'title': 'Cuenta',
+                                            'value': account,
+                                            'short': True
+                                        },{
+                                            'title': 'Código',
+                                            'value': code,
+                                            'short': True
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                else :
+                    error_msg = 'Favor cambiar url !!! \n' + str(request_data['message'])
+                    request_tx = {
+                            'username': '[jonnattan.com]: Notificación Recibida',
+                            'text': error_msg,
+                        }
+
+                try :
+                    logging.info("URL : " + url )
+                    if url != 'None' :
+                        response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+                        diff = time.monotonic() - m1;
+                        http_code = response.status_code 
+                        if( response != None and response.status_code == 200 ) :
+                            logging.info('Response Slack' + str( response ) )
+                        elif( response != None and response.status_code != 200 ) :
+                            logging.info("Response NOK" + str( response ) )
+                        else :
+                            logging.info("Nose pudo notificar por Slak")
+                except Exception as e:
+                    print("ERROR POST:", e)
+
+                logging.info("Time Response in " + str(diff) + " sec.")
+                return dataTx, http_code
+            else: 
+                # logging.info("Reciv H : " + str(request.headers) )
+                banks = Banks()
+                data = banks.json_banks
+                del banks
+        logging.info("Response time " + str(time.monotonic_ns() - m1) + " ns")
+        return dataTx, http_code
 
 class Deposit() :
 

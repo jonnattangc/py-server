@@ -11,11 +11,11 @@ try:
     from flask import jsonify
 except ImportError:
     logging.error(ImportError)
-    print((os.linesep * 2).join(['[Sserpxelihc] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    print((os.linesep * 2).join(['[Irelez] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
     sys.exit(-2)
 
 
-class Sserpxelihc() :
+class Irelez() :
     db = None
 
     def __init__(self) :
@@ -25,36 +25,26 @@ class Sserpxelihc() :
             user_bd = str(os.environ.get('USER_BD','----'))
             pass_bd = str(os.environ.get('PASS_BD','*****'))
             eschema = str(os.environ.get('SCHEMA_BD','*****'))
-
             self.db = pymysql.connect(host=host, port=port, 
                 user=user_bd, password=pass_bd, database=eschema, 
                 cursorclass=pymysql.cursors.DictCursor)
-            
         except Exception as e :
-            print("ERROR BD:", e)
+            print("ERROR __init__:", e)
             self.db = None
 
     def __del__(self):
         if self.db != None:
             self.db.close()
 
-    def connect( self ) :
-        try:
-            if self.db == None :
-                self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
-        except Exception as e :
-            print("ERROR BD:", e)
-            self.db = None
-
-    def isConnect(self) :
+    def is_connect(self) :
         return self.db != None
 
     def get_config(self) :
         config = {}
         try :
-            if self.isConnect() :
+            if self.is_connect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'chilexpress'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'zeleri'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results:
@@ -72,7 +62,7 @@ class Sserpxelihc() :
                     }
                     break
         except Exception as e:
-            print("ERROR BD get_config():", e)
+            print("ERROR BD:", e)
             config = {}
         logging.info("Configuracion para ambiente de [" + str(config) + "]" )
         return config
@@ -81,7 +71,7 @@ class Sserpxelihc() :
         success = False
         current = self.getEnv()
         try :
-            if self.isConnect() and self.environment != env:
+            if self.is_connect() and self.environment != env:
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set environment=%s where client=%s"""
                 cursor.execute(sql, (env,'chilexpress'))
@@ -101,7 +91,7 @@ class Sserpxelihc() :
     def saveCache(self, request: str, hash: str, response: str, id: int ) :
         success = False
         try :
-            if self.isConnect() :
+            if self.is_connect() :
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set request=%s, response=%s, hash=%s where id=%s"""
                 cursor.execute(sql, (request, response, hash, id))
@@ -120,82 +110,58 @@ class Sserpxelihc() :
             key = congig['ot']
         if path.find('georeference/') >= 0  :
             key = congig['geo']
+        if path.find('integration/') >= 0  :
+            key = congig['geo']
+        if path.find('production/') >= 0  :
+            key = congig['geo']
         return key
 
-    def requestProcess(self, request, subpath ) :
-            logging.info("===================================== INIT ==========================================================" )
-            logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
-            #logging.info("Reciv Header : " + str(request.headers) )
+    def request_process(self, request, subpath ) :
+            logging.info("========================================== /ZLR =============================================================" )
+            logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
+            logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
-            config = self.get_config()
-            #logging.info("######## Config: " + str(config) )
-            url = config['url'] + str(subpath)
-            key = self.get_key_by_path(config, subpath)
-            # si est'a habilitado el cache, se compara el hash
-            if( config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 ) :   
-                logging.info("Cache habilitado, se compara el hash " ) 
-                hash : str = str(hashlib.md5(request.data).hexdigest())
-                if hash != None and hash == config['hash'] :
-                    data_response = config['response']
-                    json_data = json.dumps(data_response)
-                    logging.info("Se responde el cache OK: " + json.loads(json_data) ) 
-                    return json.loads(json_data), 200
-                else: 
-                    logging.info("No se responde el cache, se sigue !! " )
+            
+            authorization = request.headers.get('Authorization')
+            logging.info("-----> Authorization: " + str(authorization) )
 
-            headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
+            config = self.get_config()
+            key = self.get_key_by_path(config, subpath)
+            url = config['url'] + str(subpath).replace('integration','').replace('production','')
+            
+            headers = {
+                'Authorization': str(authorization), 
+                'Content-Type': 'application/json' 
+            }
+
             # valores por defecto
             data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error interno Gw' })
             errorCode = 500
+            m1 = time.monotonic()
+            diff = 0
             try :
-                m1 = time.monotonic()
                 resp = None
                 if (request.method == 'POST' ) :
                     logging.info("URL : " + url )
-                    resp = requests.post(url, data = request.data, headers = headers, timeout = 40)
+                    resp = requests.post(url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
-
                 if (request.method == 'PUT' ) :
                     logging.info("URL : " + url )
-                    resp = requests.put( url, data = request.data, headers = headers, timeout = 40)
+                    resp = requests.put( url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
-
                 if (request.method == 'GET' ) :
-                    if ( subpath.find('agendadigital/') >= 0  ) :
-                        key = '9c853753ce314c81934c4f966dad7755'
-                        url = 'https://services.wschilexpress.com/' + str(subpath)
-                        headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
-                        fecha = request.args.get('fecha', '-1')
-                        if ( fecha != '-1' and subpath.find('GetArticulos') < 0 ) :
-                            url = url + "?fecha=" + fecha
-                    else:
-                        region = request.args.get('RegionCode', '-1')
-                        tipo = request.args.get('type', '-1')
-                        if ( region != '-1' and tipo != '-1' ) :
-                            url = url + "?RegionCode=" + region + "&type=" + tipo
-                    # se reevia la peticion
                     logging.info("URL : " + url )
-                    resp = requests.get(url, data = request.data, headers = headers, timeout = 40)
+                    resp = requests.get(url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
                 errorCode = resp.status_code
-                logging.info("Key         : " + str(key) )
-                
-                if( resp.status_code == 200 ) :
+                if resp.status_code == 200 :
                     data_response = resp.json()
-                    logging.info("Response CXP OK: " + str( data_response ) )
-                    # se actualiza en la BD s'olo si esta habilitado
-                    if config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 :
-                        hash : str = str(hashlib.md5(request.data).hexdigest())
-                        self.saveCache( str(request.get_json()), hash, str(data_response), config['id'] )
-
+                    logging.info("Response OK: " + str(data_response) )
                 else :
                     data_response = resp.json()
-                    logging.info("Response CXP NOK[" + str(resp.status_code) + "]: " + str( data_response ) )
-
-                logging.info("Time Response in " + str(diff) + " sec." )
-
+                    logging.info("Response NOK[" + str(resp.status_code) + "]: " + str( data_response ) )
             except Exception as e:
                 print("ERROR POST:", e)
-            
-            logging.info("===================================== END ==========================================================" )
+                diff = time.monotonic() - m1;
+            logging.info("Time Response in " + str(diff) + " sec." )
             return data_response, errorCode

@@ -10,8 +10,8 @@ try:
     import pymysql.cursors
     from datetime import datetime
     from otp import Otp
-    from utilchatbot import UtilChatbot
     from flask import jsonify
+    from utilllm import UtilLlm
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[UtilWaza] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -20,14 +20,10 @@ except ImportError:
 
 class UtilWaza() :
     db = None
-    host = os.environ.get('HOST_BD','None')
-    user = os.environ.get('USER_BD','None') 
-    password = os.environ.get('PASS_BD','None')
     waza_token = os.environ.get('WAZA_BEARER_TOKEN','None')
     waza_phone_id = os.environ.get('PHONE_ID','None')
     waza_api_version = os.environ.get('WAZA_API_VERSION','None')
     uuid = os.environ.get('UUID_WZ','None')
-    database = 'gral-purpose'
     environment = None
     bearer_token = 'Bearer ' + str(waza_token)
     headers = None
@@ -36,7 +32,14 @@ class UtilWaza() :
     def __init__(self, root = './'):
         self.root = root
         try:
-            self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+            host = str(os.environ.get('HOST_BD','dev.jonnattan.com'))
+            port = int(os.environ.get('PORT_BD', 3306))
+            user_bd = str(os.environ.get('USER_BD','----'))
+            pass_bd = str(os.environ.get('PASS_BD','*****'))
+            eschema = str(os.environ.get('SCHEMA_BD','*****'))
+            self.db = pymysql.connect(host=host, port=port, 
+                user=user_bd, password=pass_bd, database=eschema, 
+                cursorclass=pymysql.cursors.DictCursor)
             self.headers = {'Content-Type': 'application/json', 'Authorization': str(self.bearer_token) }
         except Exception as e :
             print("ERROR BD:", e)
@@ -292,14 +295,39 @@ class UtilWaza() :
                 response = 'Hola ' + str(user) + '. Para iniciar el proceso primero toma una fotografia clara y nitida del frente de tu Carnet de Identidad'
                 self.initValidate( user, number )
             else :
-                chat = UtilChatbot()
+                chat = UtilLlm()
                 response = chat.sendQuestion(text_rx)
                 response = response.replace('Hola', ('Hola ' + str(user)))
+                response = response.replace('* ','-')
+                response = response.replace('*','')
                 del chat
             self.saveMsgs( text_rx, response, user, number )
         except Exception as e:
             print("ERROR Fabricando Respuesta:", e)
         return response
+
+    def processTextMessage( self, request_data ) :
+        response = {
+            'success' : False,
+            'result' : ''
+        }
+        code = 500
+        try :
+            if request_data != None :
+                chat = UtilLlm()
+                resp = chat.sendQuestion(request_data['mesagge'])
+                resp = resp.replace('* ','-')
+                resp = resp.replace('*','')
+                response['result'] = resp
+                response['success'] = True
+                code = 200
+                del chat
+            else :
+                return None
+        except Exception as e:
+            print("ERROR processTextMessage():", e)
+            return None
+        return response, code
 
     def markasReader( self, msg_id, number_id ) :
         data_read_json = {
@@ -320,13 +348,17 @@ class UtilWaza() :
             print("ERROR Mark(): ", e)
         
     def responseTextMessage(self, phone_number, msg_id, msg_tx, number_id ) :
+        texto: str = str(msg_tx)
+        if len(str(msg_tx)) > 4090 :
+            texto = str(msg_tx)[0:4090] + '...'
+
         data_json = {
             'messaging_product' : 'whatsapp',
             'recipient_type'    : 'individual',
             'to'                : str(phone_number),
             'context'           : { 'message_id': str(msg_id) }, 
             'type'              : 'text',
-            'text'              : { 'preview_url': False, 'body': str(msg_tx), }
+            'text'              : { 'preview_url': False, 'body': str(texto), }
         }
         url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(number_id) + '/messages'
         try :
@@ -693,10 +725,9 @@ class UtilWaza() :
                 }
             }
             # logging.info("Request Trx " + str(data_json) )
-            url = 'https://graph.facebook.com/v17.0/107854109079987/messages'
+            url = 'https://graph.facebook.com/v18.0/303918009478174/messages'
             logging.info("URL : " + url )
             response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
-            data_response = response.json()
             if response.status_code != None :
                 code = response.status_code
                 if response.status_code == 200 :
@@ -707,10 +738,12 @@ class UtilWaza() :
                         'channel' : 'whatsapp',
                         'duration_min': str(duration)
                     }
+                else :
+                    logging.info("Response Code: " + str( response.status_code ) )
         except Exception as e:
             print("ERROR SENT OTP:", e)
 
-        return jsonify(data), code
+        return data, code
 
     def validateOtp(self, data_rx ) :
         reference = str(data_rx['reference'])
@@ -753,6 +786,8 @@ class UtilWaza() :
                             data_response, errorCode = self.validateOtp( request_data )
                         elif str(subpath) == 'marketing' :
                             data_response, errorCode = self.processMarketingMessage( request_data )
+                        elif str(subpath) == 'message' :
+                            data_response, errorCode = self.processTextMessage( request_data )
                         else :
                             data_response = jsonify({'statusCode': 404, 'statusDescription': 'Servicio no encontrado' })
                             errorCode = 404
