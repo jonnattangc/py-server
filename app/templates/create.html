@@ -18,16 +18,16 @@
       <form class="row g-3" action="/page/csrf" method="POST" autocomplete="on" >
         <div class="col">
           <div class="mb-3">
-            <label for="exampleFormControlInput1" class="form-label">Rut</label>
-            <input type="text" class="form-control" id="exampleFormControlInput1"
-              placeholder="rut sin puntos y con guión">
+            <label for="username" class="form-label">Usuario: </label>
+            <input type="text" class="form-control" id="username"
+              placeholder="rut sin puntos y con guión" name="username" value="{{ rut }}">
           </div>
           <div class="mb-3">
-            <label for="exampleFormControlTextarea1" class="form-label">JSON de entrada</label>
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+            <label for="password" class="form-label">Contraseña: </label>
+            <input type="password" class="form-control" id="password" placeholder="password" name="password" value="">
           </div>
           <div class="mb-3">
-            <input type="submit" class="btn btn-primary" value="Test CSRF">
+            <input type="submit" class="btn btn-primary" value="Actualizar Datos">
           </div>
         </div>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -38,11 +38,11 @@
       <div class="col">
         {% if errorMsg %}
         <div class="alert alert-warning" role="alert">
-          Prueba con Rut: {{rut}}!
+          {{ errorMsg }}
         </div>
         {% else %}
         <div class="alert alert-success" role="alert">
-          Prueba con Rut: {{rut}}!
+          Prueba CSRF: {{csrf_token()}}
         </div>
         {% endif %}
       </div>
