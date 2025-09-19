@@ -1,7 +1,7 @@
 services:
     python-server:
       container_name: python-server
-      image: python-server:prd
+      image: python-server:prdprd1.1
       build:
         dockerfile: Dockerfile
       restart: always
