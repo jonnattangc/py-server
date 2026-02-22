@@ -54,10 +54,10 @@ class Sserpxelihc() :
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'chilexpress'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url, k.meta_data from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.environment = k.environment where p.client = 'chilexpress'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
-                for row in results:
+                for row in results :
                     config = {
                         'environment': str(row['environment']),
                         'request' : str(row['request']),
@@ -68,13 +68,14 @@ class Sserpxelihc() :
                         'cov': str(row['coverage_key']),
                         'ot' : str(row['ot_key']),
                         'geo' : str(row['geo_key']),
-                        'url' : str(row['base_url'])
+                        'url' : str(row['base_url']),
+                        'meta_data' : row['meta_data']
                     }
                     break
         except Exception as e:
             print("ERROR BD get_config():", e)
             config = {}
-        logging.info("Configuracion para ambiente de [" + str(config) + "]" )
+        logging.info("Configuracion para ambiente de [" + str(config['environment']) + "]" )
         return config
 
     def saveEnv(self, env) :
@@ -122,6 +123,29 @@ class Sserpxelihc() :
             key = congig['geo']
         return key
 
+    def procces_meta_data( self, meta_data: dict, request: dict ) :
+        if meta_data is None:
+            return request
+        if isinstance(meta_data, str):
+            try:
+                json_meta_data = json.loads(meta_data)
+            except json.JSONDecodeError:
+                logging.error("meta_data no es un JSON válido")
+                return request
+        else:
+            json_meta_data = meta_data
+        json_data = request.copy()
+        #logging.info(f"######## Request Entrada: {json_data}")
+        for key, value in json_meta_data.items():
+            #logging.info(f"######## Meta_data: {key} => {value}")
+            if key in json_data:
+                value_original = json_data[key]
+                if value_original != value:
+                    logging.info(f"Cambia: {key} de {value_original} a {value}")
+                    json_data[key] = value
+        #logging.info(f"######## Request Salida: {json_data}")
+        return json_data
+
     def requestProcess(self, request, subpath ) :
             logging.info("===================================== INIT ==========================================================" )
             logging.info("Reciv " + str(request.method) + " Contex: " + str(subpath) )
@@ -134,6 +158,7 @@ class Sserpxelihc() :
             # si est'a habilitado el cache, se compara el hash
             if( config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 ) :   
                 logging.info("Cache habilitado, se compara el hash " ) 
+                # reemplazamos los metadatos
                 hash : str = str(hashlib.md5(request.data).hexdigest())
                 if hash != None and hash == config['hash'] :
                     data_response = config['response']
@@ -152,12 +177,13 @@ class Sserpxelihc() :
                 resp = None
                 if (request.method == 'POST' ) :
                     logging.info("URL : " + url )
-                    resp = requests.post(url, data = request.data, headers = headers, timeout = 40)
+                    data_request = self.procces_meta_data(config['meta_data'], request.get_json() )
+                    resp = requests.post(url, json = data_request, headers = headers, timeout = 40)
                     diff = time.monotonic() - m1;
 
                 if (request.method == 'PUT' ) :
                     logging.info("URL : " + url )
-                    resp = requests.put( url, data = request.data, headers = headers, timeout = 40)
+                    resp = requests.put( url, json = data_request, headers = headers, timeout = 40)
                     diff = time.monotonic() - m1;
 
                 if (request.method == 'GET' ) :
@@ -173,6 +199,7 @@ class Sserpxelihc() :
                         tipo = request.args.get('type', '-1')
                         if ( region != '-1' and tipo != '-1' ) :
                             url = url + "?RegionCode=" + region + "&type=" + tipo
+                            # url = url.replace('/v2', '')
                     # se reevia la peticion
                     logging.info("URL : " + url )
                     resp = requests.get(url, data = request.data, headers = headers, timeout = 40)

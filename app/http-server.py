@@ -7,6 +7,7 @@ try:
     import time
     import requests
     import json
+    import ssl
     from flask_cors import CORS
     from flask_wtf.csrf import CSRFProtect
     from flask_httpauth import HTTPBasicAuth
@@ -24,6 +25,8 @@ try:
     from sserpxelihc import Sserpxelihc
     from irelez import Irelez
     from utilmail import MailProcess
+    from flasgger import Swagger
+    from werkzeug.middleware.proxy_fix import ProxyFix
 
 except ImportError:
 
@@ -57,17 +60,38 @@ logger = logging.getLogger('HTTP')
 SECRET_CSRF = os.environ.get('SECRET_KEY_CSRF','KEY-CSRF-ACA-DEBE-IR')
 
 app = Flask(__name__)
+
 app.config.update( DEBUG=False, SECRET_KEY = str(SECRET_CSRF), )
 
-#login_manager = LoginManager()
-#login_manager.init_app(app)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
+
+app.config['SWAGGER'] = {
+    'title': 'API Documentación',
+    'uiversion': 3,
+    'openapi': '3.0.1', # Forzar versión moderna de OpenAPI
+    'specs_route': '/apidocs/',
+    'static_url_path': '/flasgger_static',
+    'specs': [
+        {
+            "endpoint": 'apijonna',
+            "route": '/apijonna.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "headers": [],
+    "schemes": ["https"], 
+    "static_lib_url": "https://unpkg.com/swagger-ui-dist@3/"
+}
 
 csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-# cors = CORS(app, resources={r"/page/*": {"origins": ["*"]}})
-cors = CORS(app, resources={r"/page/*": {"origins": ["dev.jonnattan.com"]}})
+cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://jonna.cl","https://api.jonna.cl"])
+
+swagger = Swagger(app)
+
 # ===============================================================================
 # variables globales
 # ===============================================================================
@@ -79,8 +103,8 @@ ROOT_DIR = os.path.dirname(__file__)
 @app.route('/', methods=['GET', 'POST'])
 @csrf.exempt
 def index():
-    logging.info("Reciv solicitude endpoint: /" )
-    return redirect('/infojonna'), 302
+    logging.info("Reciv solicitude endpoint: /infojonna" )
+    return redirect('/apidocs'), 302
 
 #===============================================================================
 # Redirige
@@ -89,7 +113,7 @@ def index():
 @csrf.exempt
 def processOtherContext( subpath ):
     logging.info("Reciv solicitude endpoint: " + subpath )
-    return redirect('/infojonna'), 302
+    return redirect('/apidocs'), 302
 
 #===============================================================================
 # Redirige a mi blog personal
@@ -125,12 +149,23 @@ def unauthorized():
 #===============================================================================
 # Se checkea el estado del servidor completo para reportar
 #===============================================================================
-@app.route('/checkall', methods=['GET', 'POST'])
+@app.route('/checkall', methods=['GET'])
 @auth.login_required
 @csrf.exempt
 def checkProccess():
+    """
+    Checkea estado completo del sistema, incluyendo la configuración de la base de datos
+    ---
+    security:
+      - Basic Security: []
+    responses:
+      200:
+        description: Todos los sistemas funcionan correctamente
+      401:
+        description: No autorizado, este metodo se encutra protegido por una autenticación básica
+    """
     checker = Checker()
-    json = checker.getInfo()
+    json = checker.get_info()
     del checker
     return jsonify(json)
 
@@ -145,6 +180,15 @@ def dernedeProcess( subpath ):
     dataTx, error = edr.requestProcess(request, subpath)
     del edr
     return dataTx, error
+
+@app.route('/edr/<path:subpath>', methods=['GET', 'POST'])
+@csrf.exempt
+def edrProcessWhithError( subpath ):
+    logger.info("EDER: " + subpath)
+    #raise ssl.SSLCertVerificationError( "CertPathValidatorException: Path does not chain with any of the trust anchors")
+    # Simularía un error más genérico si no se usa la subclase
+    raise ssl.SSLError("Connection reset by peer during SSL handshake")
+
 
 # ==============================================================================
 # Para simular las respuesta de criptomkt.
@@ -223,6 +267,53 @@ def mail_process(subpath):
     del mp
     return data, code
 
+@app.get('/terms')
+@csrf.exempt
+def google_app_terms() :
+    return render_template( 'terms.html' )
+@app.get('/privacity')
+@csrf.exempt
+def google_app_privacity() :
+    return render_template( 'privacity.html' )
+#===============================================================================
+# Serivicios mobiles
+#===============================================================================
+@app.get('/mobile/privacidad')
+@csrf.exempt
+def mobile_tc() :
+    return render_template( 'privacidad.html' )
+@app.get('/mobile/delete')
+@csrf.exempt
+def mobile_pages() :
+    return render_template( 'delete.html', email='jonnattan@gmail.com' )
+
+@app.get('/mobile/deleted')
+@csrf.exempt
+def mobile_page_delete() :
+    logging.info("========================================== /MOBILE =============================================================" )        
+    logging.info("Reciv " + str(request.method) + " Contex: /mobile/deleted")
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data: " + str(request.data) )
+    return render_template( 'delete.html', email='', sendSolicitude="Solicitud de borrado ejecutada" )
+
+@app.route('/mobile/<path:subpath>', methods=['POST','GET','PUT'])
+@auth.login_required
+@csrf.exempt
+def mobile_request_proccess( subpath: str ):
+    logging.info("========================================== /MOBILE =============================================================" )        
+    logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data: " + str(request.data) )
+    logger.info("Reciv solicitude endpoint: " + subpath )
+    json = {}
+    if subpath.lower().find("validate") >= 0:
+        json = {'nombre':'Jonnattan', 'depto':'124', 'torre':'A'}
+    elif subpath.lower().find("door") >= 0:
+        request_data = request.get_json()
+        state : bool= request_data['state']
+        json = {'opened': not state }
+    return jsonify(json), 200
+
 # ==============================================================================
 # Procesa solicitudes desde pagina web
 # ==============================================================================
@@ -240,8 +331,10 @@ def page_page() :
 @app.post('/page/csrf')
 def csrf_token() :
     logging.info('# Reciv ' + str(request.method) + ' Contex: /page/csrf' )
-    logging.info("# Reciv Data: " + str(request.data) )
-    logging.info("# Reciv Header :\n" + str(request.headers) )
+    logging.info("# Reciv Header: " + str(request.headers) )
+    logging.info("# Reciv Data :\n" + str(request.data) )
+    logging.info("# Reciv Form :\n" + str(request.form) )
+    logging.info("# Reciv Cookies :\n" + str(request.cookies) )
     return render_template( 'galery.html' )
 
 
@@ -257,13 +350,21 @@ def process_page( subpath ):
     else:
         return jsonify(data_response), http_status
 
-@app.route('/cxp/<path:subpath>', methods=['GET','POST'])
+@app.route('/cxp/<path:subpath>', methods=['GET','POST','PUT'])
 @csrf.exempt
 def process_cxp( subpath ):
     cxp = Sserpxelihc()
     data_response, http_code = cxp.requestProcess(request, str(subpath))
     del cxp
     return data_response, http_code
+
+
+@app.route('/status', methods=['GET','POST','PUT'])
+def status_test() :
+    logging.info('# Reciv ' + str(request.method) + ' Contex: /status' )
+    logging.info("# Reciv Data: " + str(request.data) )
+    logging.info("# Reciv Header :\n" + str(request.headers) )
+    return {'status': 'ok'}, 200
 
 
 @app.route('/zlr/<path:subpath>', methods=['GET','POST','PUT'])

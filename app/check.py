@@ -8,6 +8,7 @@ try:
     import pymysql.cursors
     from datetime import datetime, timedelta
     from utils import Banks
+    import psutil
 
 except ImportError:
 
@@ -39,6 +40,7 @@ class Checker() :
             self.db.close()
 
     def is_connect(self) :
+        version = 'Desconocida'
         if  self.db != None :
             try :
                 logging.info('Se ha conectado a la BD') 
@@ -50,26 +52,41 @@ class Checker() :
                     version = row['version']
                     logging.info('Version BD: ' + str(version))
                 cursor.close()
-                return True
             except Exception as e:
                 print("ERROR is_connect():", e)
-        return False
+        return version
 
     def get_info(self) :
-        m1 = time.monotonic()
-        logging.info("Check Status All Components" )
-        status_bd = self.is_connect()
+        m1 = time.time()
+        logging.info("Check Status Gral" )
+        version_bd = self.is_connect()
+        memoria = psutil.virtual_memory()
+        disco = psutil.disk_usage('/')
 
-        banks = Banks( filename='bank/banks' )
-        data = banks.json_banks
-        del banks
-        time_response = time.monotonic() - m1
         data = {
-            'Bancks'    : data ,
-            'Data Base' : status_bd,
-            'Time'      : time_response
+            'Memoria': {
+                'Total'      : f"{memoria.total / (1024**3):.2f} GB",
+                'Disponible' : f"{memoria.available / (1024**3):.2f} GB",
+                'Utilizada'  : f"{memoria.used / (1024**3):.2f} GB, {memoria.percent}%",
+            },
+            'Disco': {
+                'Total'      : f"{disco.total / (1024**3):.2f} GB",
+                'Disponible' : f"{disco.free / (1024**3):.2f} GB",
+                'Utilizada'  : f"{disco.used / (1024**3):.2f} GB, {disco.percent}%",
+            },
+            'CPU' : {
+                'Cores' : psutil.cpu_count(logical=False),
+                'Total' : psutil.cpu_count(logical=True)
+            },
+            'Database' : {
+                'NAME'     : 'MySQL',
+                'Version'    : version_bd,
+            },
+            'Uptime': str(datetime.now() - datetime.fromtimestamp(psutil.boot_time()))
         }
-        logging.info("Response in " + str(time_response) + " ms")
+        m2 = time.time()
+        time_response = str(m2 - m1)
+        logging.info("Response in " + time_response)
         return data
     
     def get_status_pages(self) : 
@@ -88,6 +105,7 @@ class Checker() :
                 code = response.status_code
                 if response.status_code == 200 :
                     data_response = response.json()
+                    logging.info("Monitors: " + str(data_response) )
         except Exception as e:
             print("ERROR Status:", e)
 
