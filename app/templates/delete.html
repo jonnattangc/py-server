@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <title>Eliminacion de usuarios app</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+
+</head>
+
+<body>
+  <div class="container" max-width="sm" style="padding:5px 0px 0px 0px;">
+    <!-- La siguiente fila es con el boton -->
+    <div class="row" style="padding:10px 0px 0px 0px;">
+      <form class="row g-3" action="/mobile/deleted" method="DELETE" autocomplete="on" >
+        <div class="col">
+          <div class="mb-3">
+            <label for="username" class="form-label">Usuario: </label>
+            <input type="text" class="form-control" id="username"
+              placeholder="rut sin puntos y con guión" name="username" value="{{ email }}">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña: </label>
+            <input type="password" class="form-control" id="password" placeholder="password" name="password" value="">
+          </div>
+          <div class="mb-3">
+            <input type="submit" class="btn btn-primary" value="Eliminar usuario">
+          </div>
+        </div>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      </form>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        {% if errorMsg %}
+        <div class="alert alert-warning" role="alert">
+          {{ errorMsg }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+     <div class="row">
+      <div class="col">
+        {% if sendSolicitude %}
+        <div class="alert alert-success" role="alert">
+          {{ sendSolicitude }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>

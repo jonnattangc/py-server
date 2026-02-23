@@ -110,9 +110,7 @@ class Irelez() :
             key = congig['ot']
         if path.find('georeference/') >= 0  :
             key = congig['geo']
-        if path.find('integration/') >= 0  :
-            key = congig['geo']
-        if path.find('production/') >= 0  :
+        if path.find('checkout/orders') >= 0  :
             key = congig['geo']
         return key
 
@@ -123,11 +121,18 @@ class Irelez() :
             logging.info("Reciv Data: " + str(request.data) )
             
             authorization = request.headers.get('Authorization')
-            logging.info("-----> Authorization: " + str(authorization) )
+            logging.info("-----> Authorization Rx: " + str(authorization) )
 
             config = self.get_config()
-            key = self.get_key_by_path(config, subpath)
+            jwt_token = self.get_key_by_path(config, subpath)
+
             url = config['url'] + str(subpath).replace('integration','').replace('production','')
+            logging.info("URL: " + str(url) )
+
+            if jwt_token != None and jwt_token != '' :
+                authorization = "Bearer " + str(jwt_token)
+            
+            logging.info("-----> Authorization Tx: " + str(authorization) )
             
             headers = {
                 'Authorization': str(authorization), 
@@ -142,15 +147,15 @@ class Irelez() :
             try :
                 resp = None
                 if (request.method == 'POST' ) :
-                    logging.info("URL : " + url )
+                    logging.info("POST URL : " + url )
                     resp = requests.post(url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
                 if (request.method == 'PUT' ) :
-                    logging.info("URL : " + url )
+                    logging.info("PUT URL : " + url )
                     resp = requests.put( url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
                 if (request.method == 'GET' ) :
-                    logging.info("URL : " + url )
+                    logging.info("GET URL : " + url )
                     resp = requests.get(url, data = request.data, headers = headers, timeout = 120)
                     diff = time.monotonic() - m1;
                 errorCode = resp.status_code
