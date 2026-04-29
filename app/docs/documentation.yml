@@ -1,0 +1,10 @@
+get:
+  summary: "Consulta de datos"
+  responses:
+    '200':
+      description: "Operación exitosa"
+post:
+  summary: "Creación de registros"
+  responses:
+    '201':
+      description: "Creado correctamente"

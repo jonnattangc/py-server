@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="PRAGMA" content="NO-CACHE">
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+    <meta http-equiv="EXPIRES" content="0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="notranslate">
+    <meta name="googlebot" content="notranslate">
+    
+    <title>Tesorería 3 Básicos - Saint Peter's School</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f8f4;
+            margin: 0;
+            color: #2d4a3e;
+        }
+
+        /* Encabezado compacto */
+        header {
+            background-color: #2e7d32;
+            color: white;
+            padding: 12px 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .school-name {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        /* Tarjeta de Datos Bancarios Compacta */
+        .bank-card {
+            background: white;
+            max-width: 400px;
+            margin: 10px auto;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
+            border-top: 3px solid #a4d4ae;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2px 8px;
+            font-size: 0.8rem;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .value {
+            color: #1b3320;
+        }
+
+        /* Sistema de Pestañas */
+        .tabs-container {
+            max-width: 1100px;
+            margin: 20px auto;
+            width: 95%;
+        }
+
+        .tabs-menu {
+            display: flex;
+            gap: 5px;
+            margin-bottom: -1px;
+            /* Para que solape con el borde del contenido */
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: #e0eadd;
+            color: #2e7d32;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tab-button.active {
+            background: white;
+            border: 1px solid #ddd;
+            border-bottom: 2px solid white;
+            /* Oculta el borde inferior */
+            color: #2e7d32;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 15px;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ddd;
+            display: none;
+            /* Se oculta por defecto */
+        }
+
+        .tab-content.active {
+            display: block;
+            /* Solo se muestra la activa */
+        }
+
+        /* Estilo Lista de Informaciones */
+        .event-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .event-item {
+            padding: 15px;
+            border-left: 4px solid #4caf50;
+            background: #f9fdfa;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .event-date {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .event-title {
+            display: block;
+            font-weight: bold;
+            color: #2e7d32;
+            margin: 4px 0;
+        }
+
+        /* Ajuste del Iframe */
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #8da396;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Tesorería 3 Básicos</h1>
+        <div class="school-name">Saint Peter's School</div>
+    </header>
+
+    <section class="bank-card">
+        <div class="data-grid">
+            <div class="label">Titular:</div>
+            <div class="value">Jonnattan Griffiths Catalán</div>
+            <div class="label">RUT:</div>
+            <div class="value">15.173.808-7</div>
+            <div class="label">Banco:</div>
+            <div class="value">Prepago Tenpo</div>
+            <div class="label">Cuenta:</div>
+            <div class="value">Vista N° 111115173808</div>
+            <div class="label">Correo:</div>
+            <div class="value">jonnattan@gmail.com</div>
+        </div>
+    </section>
+
+    <div class="tabs-container">
+        <div class="tabs-menu">
+            <button class="tab-button active" onclick="openTab(event, 'tesoreria')">Tesorería</button>
+            <button class="tab-button" onclick="openTab(event, 'informaciones')">Informaciones</button>
+        </div>
+
+        <div id="tesoreria" class="tab-content active">
+            <iframe
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRJGZIlJr6YifHEKXyNrUbm2RY7ZH8NNri8l_3qYc-6qNJ7Rs6TWo9kZCZoHNkcfLEYd6NysQ4L1PjX/pubhtml?widget=true&amp;headers=false"></iframe>
+        </div>
+
+        <div id="informaciones" class="tab-content">
+            <div class="event-list">
+                <div class="event-item">
+                    <span class="event-date">Lunes 16 de Marzo, 2026 - 20:30 hrs</span>
+                    <span class="event-title">St Patrick's Day</span>
+                    <p style="margin: 0; font-size: 0.9rem;">Se compraron galletas de color verde en forma de trebol para los 40 alumnos por un valor de <strong>$29.400</strong>.</p>
+                </div>
+            </div>
+            <div class="event-list">
+                <div class="event-item">
+                    <span class="event-date">Miércoles 25 de Marzo, 2026 - 18:30 hrs</span>
+                    <span class="event-title">Reunión de Apoderados</span>
+                    <p style="margin: 0; font-size: 0.9rem;">En la reunión del día de hoy se aprobó la cuota de curso de
+                        <strong>$15.000</strong> por 10 meses (marzo a diciembre).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Información sobre pagos tiene un retraso de 1 a 2 días.
+    </footer>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+
+</body>
+
+</html>

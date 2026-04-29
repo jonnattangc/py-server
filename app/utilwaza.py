@@ -298,6 +298,7 @@ class UtilWaza() :
                 chat = UtilLlm()
                 response = chat.sendQuestion(text_rx)
                 response = response.replace('Hola', ('Hola ' + str(user)))
+                response = response.replace('Wena', ('Wena ' + str(user)))
                 response = response.replace('* ','-')
                 response = response.replace('*','')
                 del chat
@@ -336,19 +337,21 @@ class UtilWaza() :
             'message_id'        : str(msg_id)
         }
         url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(number_id) + '/messages'
-        # logging.info("URL : " + url )
+        logging.info(f"Marking Message: {url}" )
         try :
             response = requests.post(url, data = json.dumps(data_read_json), headers = self.headers, timeout = 40)
             data_response = response.json()
             if response.status_code != None and response.status_code == 200 :
                 data_response = response.json()
                 logging.info("Message Marked: " + str( data_response['success'] ) )
-
+            else :
+                logging.error(f"Message Marked: {data_response}" )
         except Exception as e:
             print("ERROR Mark(): ", e)
         
     def responseTextMessage(self, phone_number, msg_id, msg_tx, number_id ) :
         texto: str = str(msg_tx)
+
         if len(str(msg_tx)) > 4090 :
             texto = str(msg_tx)[0:4090] + '...'
 
@@ -360,15 +363,17 @@ class UtilWaza() :
             'type'              : 'text',
             'text'              : { 'preview_url': False, 'body': str(texto), }
         }
+
         url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(number_id) + '/messages'
+        logging.info(f"URL : {url}" )
         try :
             response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
             data_response = response.json()
             if response.status_code != None and response.status_code == 200 :
                 data_response = response.json()
-                # logging.info("Response : " + str( data_response ) )
+                logging.info(f"Respuesta : {data_response}" )
             else:
-                logging.error("ErrorResponse : " + str( data_response ) )
+                logging.error(f"Respuesta : {data_response}" )
         except Exception as e:
             print("ERROR responseTextMessage(): ", e)
 
@@ -639,30 +644,46 @@ class UtilWaza() :
                 messages = None
 
             if str(meta_msg['messaging_product']) == 'whatsapp' and statuses != None :
-                logging.info("Un mensaje fue liberado a: " + str(statuses[0]['recipient_id']) )
+                logging.info("Mensaje liberado a: " + str(statuses[0]['recipient_id']) )
 
             if str(meta_msg['messaging_product']) == 'whatsapp' and contacts != None :
                 number_id = meta_msg['metadata']['phone_number_id']
-                wsuser = contacts[0]['profile']['name']
-                wsnumber = contacts[0]['wa_id']
-                msg_id = messages[0]['id']
-                self.markasReader( msg_id, number_id )
-                msg_type = messages[0]['type']
-                if str(msg_type) == 'text'  :
-                    msg_rx = messages[0]['text']['body']
-                    msg_tx = self.buildResponse( wsuser, wsnumber, msg_rx )
-                    self.responseTextMessage( wsnumber, msg_id, msg_tx, number_id )
-                elif str(msg_type) == 'request_welcome'  :
+                contact = contacts[0]
+                
+                wsuser = 'Desconocido'
+                if 'profile' in contact :
+                    wsuser = contact['profile']['name']
+                if 'user_id' in contact :
+                     wsuser = contact['user_id']
+
+                wsnumber = contact['wa_id']
+                if messages == None :
                     code = 200
+                    response = "OK"
                 else :
-                    logging.info("Mensajes Multimedia: Tipo[" + str(msg_type) + "] number_id[" + str(number_id) + "] name_wsuser[" + str(wsuser) + "] wsnumber[" + str(wsnumber) + "]")
-                    state, next = self.getCurrentAndNextState( wsuser, wsnumber)
-                    if state == None :
-                        self.responseTextMessage( wsnumber, msg_id, 'Para procesar imagenes debes iniciar la validación. Escribe comando /validar', number_id )
+                    msg_id = messages[0]['id']
+                    logging.info(f" Marco como leido, number_id[" + str(number_id) + "] name_wsuser[" + str(wsuser) + "] wsnumber[" + str(wsnumber) + "] msg_id[" + str(msg_id) + "]")
+                    self.markasReader( msg_id, number_id )
+                    msg_type = messages[0]['type']
+                    if str(msg_type) == 'text'  :
+                        msg_rx = messages[0]['text']['body']
+                        logging.info(f"Mensaje: {msg_rx}")
+                        if msg_rx == 'this is a text message' :
+                            msg_rx = 'Esto es un mensaje de texto'
+                        else :
+                            msg_tx = self.buildResponse( wsuser, wsnumber, msg_rx )
+                            self.responseTextMessage( wsnumber, msg_id, msg_tx, number_id )
+                    elif str(msg_type) == 'request_welcome'  :
+                        code = 200
                     else :
-                        obj_rx_type = messages[0][str(msg_type)]['mime_type']
-                        obj_rx_id = messages[0][str(msg_type)]['id']
-                        self.processMultiMediaMessage( obj_rx_type, obj_rx_id, number_id, wsnumber, wsuser )
+                        logging.info("Mensajes Multimedia: Tipo[" + str(msg_type) + "] number_id[" + str(number_id) + "] name_wsuser[" + str(wsuser) + "] wsnumber[" + str(wsnumber) + "]")
+                        state, next = self.getCurrentAndNextState( wsuser, wsnumber)
+                        if state == None :
+                            self.responseTextMessage( wsnumber, msg_id, 'Para procesar imagenes debes iniciar la validación. Escribe comando /validar', number_id )
+                        else :
+                            obj_rx_type = messages[0][str(msg_type)]['mime_type']
+                            obj_rx_id = messages[0][str(msg_type)]['id']
+                            self.processMultiMediaMessage( obj_rx_type, obj_rx_id, number_id, wsnumber, wsuser )
                 
         elif field != None :
             response = "No hay procesamiento para este tipo de mensaje: " + field
@@ -725,7 +746,7 @@ class UtilWaza() :
                 }
             }
             # logging.info("Request Trx " + str(data_json) )
-            url = 'https://graph.facebook.com/v18.0/303918009478174/messages'
+            url = f"https://graph.facebook.com/{self.waza_api_version}/303918009478174/messages"
             logging.info("URL : " + url )
             response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
             if response.status_code != None :
@@ -758,12 +779,11 @@ class UtilWaza() :
         logging.info("######### RESPONSE : " + str(dataTx) )
         return jsonify(dataTx), 200
 
-    def requestProcess(self, request, subpath ) :
-            logging.info('########################## ' + str(request.method) + ' ###################################')
-            # logging.info("Reciv Header : " + str(request.headers) )
-            # logging.info("Contex: " + str(subpath) )
-            # logging.info("Reciv Data: " + str(request.data) )
-            # logging.info("Reciv Params: " + str(request.args) )
+    def requestProcess(self, request, subpath : str = None ) :
+            logging.info(f"================================== {subpath} -> {str(request.method)} ==================================")
+            logging.info("Reciv Header : " + str(request.headers) )
+            #logging.info("Reciv Data: " + str(request.data) )
+            #logging.info("Reciv Params: " + str(request.args) )
             # valores por defecto
             data_response = jsonify({'statusCode': 500, 'statusDescription': 'Error en la ejecucion del servicio' })
             errorCode = 500
@@ -779,6 +799,7 @@ class UtilWaza() :
                             errorCode = 401
                 elif str(request.method) == 'POST' :
                     request_data = request.get_json()
+                    # logging.info(f"Reciv Data: {request_data}")
                     if subpath != None :
                         if str(subpath) == 'generate' :
                             data_response, errorCode = self.generateAndSendOtp( request_data )
@@ -794,6 +815,7 @@ class UtilWaza() :
                     else :
                         if str(request_data['object']) == 'whatsapp_business_account' :
                             entries = request_data['entry']
+                            logging.info(f"Entries: {entries}")
                             message, errorCode = self.responseWazaMessage( entries[0]['changes'][0] )
                             data_response = jsonify({'statusCode': errorCode, 'statusDescription': str(message) })
                         # Esto responde a la inscriopcion de un webhook de whatsapp

@@ -55,7 +55,10 @@ logger = logging.getLogger('HTTP')
 # ===============================================================================
 # Configuraciones generales del servidor Web
 # ===============================================================================
-
+# ===============================================================================
+# variables globales
+# ===============================================================================
+ROOT_DIR = os.path.dirname(__file__)
 
 SECRET_CSRF = os.environ.get('SECRET_KEY_CSRF','KEY-CSRF-ACA-DEBE-IR')
 
@@ -65,11 +68,38 @@ app.config.update( DEBUG=False, SECRET_KEY = str(SECRET_CSRF), )
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
 
+template = {
+    "openapi": "3.0.1",
+    "info": {
+        "title": "API Documentación",
+        "description": "Documentación de mi API con modelos compartidos",
+        "version": "1.0.0"
+    },
+    "components": {
+        "schemas": {
+            "MiModelo": {  # <--- AQUÍ DEFINES EL MODELO QUE TE DABA ERROR
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Juan Perez"
+                    }
+                }
+            }
+        }
+    }
+}
+
 app.config['SWAGGER'] = {
     'title': 'API Documentación',
     'uiversion': 3,
     'openapi': '3.0.1', # Forzar versión moderna de OpenAPI
     'specs_route': '/apidocs/',
+    'doc_dir': str(ROOT_DIR) + '/docs',
     'static_url_path': '/flasgger_static',
     'specs': [
         {
@@ -84,18 +114,13 @@ app.config['SWAGGER'] = {
     "static_lib_url": "https://unpkg.com/swagger-ui-dist@3/"
 }
 
+swagger = Swagger(app, template=template)
+
 csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://jonna.cl","https://api.jonna.cl"])
-
-swagger = Swagger(app)
-
-# ===============================================================================
-# variables globales
-# ===============================================================================
-ROOT_DIR = os.path.dirname(__file__)
+cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
 
 #===============================================================================
 # Redirige
@@ -169,26 +194,34 @@ def checkProccess():
     del checker
     return jsonify(json)
 
+
+@app.get('/tesorero')
+@csrf.exempt
+def tesoro() :
+    return render_template( 'tesoreria.html' )
+
 # ==============================================================================
 # Test con Edr
 # ==============================================================================
-@app.route('/dernede/<path:subpath>', methods=['GET', 'POST'])
+@app.route('/edr/<path:subpath>', methods=['GET', 'POST'])
 @csrf.exempt
 @auth.login_required
 def dernedeProcess( subpath ):
+    """
+    Procesa una solicitud a Dernede, un proveedor de servicios de API que se encarga de llamar a los servicios de API de terceros.
+    ---
+    parameters:
+      - subpath: La ruta del servicio que se desea llamar.
+    responses:
+      200:
+        description: La respuesta de la API de terceros.
+      401:
+        description: No autorizado, este método se encuentra protegido por una autenticación básica.
+    """
     edr = Dernede(ROOT_DIR)
     dataTx, error = edr.requestProcess(request, subpath)
     del edr
     return dataTx, error
-
-@app.route('/edr/<path:subpath>', methods=['GET', 'POST'])
-@csrf.exempt
-def edrProcessWhithError( subpath ):
-    logger.info("EDER: " + subpath)
-    #raise ssl.SSLCertVerificationError( "CertPathValidatorException: Path does not chain with any of the trust anchors")
-    # Simularía un error más genérico si no se usa la subclase
-    raise ssl.SSLError("Connection reset by peer during SSL handshake")
-
 
 # ==============================================================================
 # Para simular las respuesta de criptomkt.
@@ -197,6 +230,29 @@ def edrProcessWhithError( subpath ):
 @csrf.exempt
 @auth.login_required
 def crypto_mrk(subpath) :
+    """
+    Servicio para jugar con datos cifrados
+    ---
+    security:
+      - Basic Security: []
+    # Sección para el GET
+    get:
+      description: obtener datos cifrados
+      responses:
+        200:
+          description: datos cifrados
+    # Sección para el POST
+    post:
+      description: crear datos cifrados
+      parameters:
+        - name: body
+          in: body
+          schema:
+            id: MiModelo
+            properties:
+              nombre:
+                type: string
+    """
     manager = Coordinator()
     dataTx, code_http = manager.proccess_solicitude( request, str( subpath) )
     del manager
@@ -232,14 +288,25 @@ def proccess_ucc( subpath ):
 @app.route('/waza', methods=['POST','GET','PUT'])
 @csrf.exempt
 def wazasp_1( ):
-    return process_waze_msg( None )
+    return process_waze_msg()
 
 @app.route('/waza/<path:subpath>', methods=['POST','GET','PUT'])
 @csrf.exempt
 def wazasp_2( subpath: str ):
     return process_waze_msg( subpath )
 
-def process_waze_msg( subpath: str ) :
+def process_waze_msg( subpath: str = None ) :
+    """
+    Procesa una solicitud a Waza, un proveedor de servicios de API que se encarga de llamar a los servicios de API de terceros.
+    ---
+    parameters:
+      - subpath: La ruta del servicio que se desea llamar.
+    responses:
+      200:
+        description: La respuesta de la API de terceros.
+      401:
+        description: No autorizado, este método se encuentra protegido por una autenticación básica.
+    """
     waza = UtilWaza( ROOT_DIR )
     msg, code = waza.requestProcess(request, subpath)
     del waza
@@ -296,6 +363,45 @@ def mobile_page_delete() :
     logging.info("Reciv Data: " + str(request.data) )
     return render_template( 'delete.html', email='', sendSolicitude="Solicitud de borrado ejecutada" )
 
+@app.post('/mobile/sms')
+@csrf.exempt
+def mobile_request_sms():
+    logging.info("========================================== /SMS =============================================================" )        
+    logging.info("Reciv Header : " + str(request.headers) )
+    logging.info("Reciv Data: " + str(request.data) )
+    url_base = os.environ.get('NOTIFICATION_URL', None)
+    api_key = os.environ.get('NOTIFICATION_API_KEY', None)
+
+    if url_base is None or api_key is None:
+        return {'code': "ERROR" }, 500
+    
+    data : dict = request.get_json()
+    
+    try :
+        url : str = f"{url_base}/slack"
+        logging.info("URL : " + url )
+        headers = {
+            'Content-Type': 'application/json',
+            'x-api-key': str(api_key)
+        }
+        request_tx : dict = {
+            'type': 'clear',
+            'data': data
+        }
+        response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+        if( response != None and response.status_code == 200 ) :
+            logging.info('Response Slack' + str( response ) )
+        elif( response != None and response.status_code != 200 ) :
+            logging.info("Response NOK" + str( response ) )
+        else :
+            logging.info("No se notifica nada por Slak")
+        sucess = True
+    except Exception as e:
+        logging.info("Response JSON: " + str( e ) )
+        print("ERROR POST:", e)
+
+    return {'code': "OK" }, 200
+
 @app.route('/mobile/<path:subpath>', methods=['POST','GET','PUT'])
 @auth.login_required
 @csrf.exempt
@@ -312,6 +418,10 @@ def mobile_request_proccess( subpath: str ):
         request_data = request.get_json()
         state : bool= request_data['state']
         json = {'opened': not state }
+    elif subpath.lower().find("sms") >= 0:
+        request_data = request.get_json()
+        logging.info("Reciv SMS !!!")
+        json = {'code': "OK" }
     return jsonify(json), 200
 
 # ==============================================================================

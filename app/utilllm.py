@@ -22,11 +22,12 @@ class UtilLlm() :
 
     def sendQuestion(self, question : str ) :
         txt_response = 'No tengo esa respuesta'
-        
+        context : str = "Eres el Tesorero del curso tercero básico del Colegio Saint Peter's, el curso tiene 40 alumno. Utilizas el archivo excel para mantener actualizada la información de tesorería. Los 40 alumnos están en la Hoja Cuotas en la comlumna A desde la fila 2 a la 41, las columnas B a la K son los 10 meses que se deben pagar las cuotas, de Marzo a Diciembre. Cada celda corresponde al pago del mes para el alumno. La Columna M es el resumen de los 10 meses del alumno. Cada celda vacia significa mes no pagado para el alumno. Responde con un un tono divertido, amable, preciso y corto"
         data_question = {
             'type': 'clear',
             'data': {
-                'prompt': question
+                'prompt': 'respondeme en español el siguiente mensaje: ' + question,
+                'asistantType': context
             }
         }
 
