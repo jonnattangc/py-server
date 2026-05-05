@@ -26,10 +26,13 @@ SUCCESS_CODE = 0
 class Captcha :
     root_dir = None
     google_secret = None
+    hcaptcha_secret = None
     def __init__(self, root_dir = str(ROOT_DIR)) :
         try:
             self.root_dir = root_dir
             self.google_secret = os.environ.get('RECAPTCHA_SECRET_KEY','NO_SECRET_KEY')
+            self.hcaptcha_secret = os.environ.get('HCAPTCHA_SECRET_KEY','NO_SECRET_KEY')
+
         except Exception as e :
             print("ERROR :", e)
             self.root_dir = None
@@ -43,8 +46,8 @@ class Captcha :
         headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
 
         token = str(json_data['token'])
-        secret = str(json_data['secret'])
         sitekey = str(json_data['sitekey'])
+        secret = str(self.hcaptcha_secret)
 
         logging.info("token recibido de largo " + str(len(token)) )
         diff = 0

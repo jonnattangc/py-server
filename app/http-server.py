@@ -120,7 +120,7 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
+cors = CORS(app, origins=["http://192.168.1.10:3000","https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
 
 #===============================================================================
 # Redirige
@@ -448,7 +448,7 @@ def csrf_token() :
     return render_template( 'galery.html' )
 
 
-@app.route('/page/<path:subpath>', methods=['GET','POST'])
+@app.route('/page/<path:subpath>', methods=['GET','POST','PUT'])
 @csrf.exempt
 @auth.login_required
 def process_page( subpath ):
