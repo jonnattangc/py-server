@@ -18,6 +18,7 @@ try:
     from captcha import Captcha
     from utils import Banks, Cipher
     from check import Checker
+    from utilgeo import UtilGeo
 
 except ImportError:
 
@@ -59,9 +60,9 @@ class Page :
         json_data = None
         is_page: bool = False
 
-        logging.info("Reciv " + str(request.method) + " Contex: /page/" + str(subpath) )
+        logging.info("Method " + str(request.method) + " Contex: /page/" + str(subpath) )
         # logging.info("Reciv Data: " + str(request.data) )
-        logging.info("Reciv Header :\n" + str(request.headers) )
+        # logging.info("Reciv Header :\n" + str(request.headers) )
 
         rx_api_key = None 
         try :
@@ -99,7 +100,10 @@ class Page :
         else: 
                 json_data = data_rx
 
-        logging.info("Payload Rx: " + str(json_data) )
+        if subpath != 'aws/file/upload' and subpath != 'aws/file/download' and subpath != 'aws/file/delete' :
+            logging.info(f"Payload Rx: {json_data}" )
+        else :
+            logging.info(f"Payload Rx: {str(json_data)[0:100]}... continua..." )
 
         if request.method == 'POST' :
             if str(subpath).find('hook') >= 0 :
@@ -135,10 +139,15 @@ class Page :
                 data, http_code = cxp.requestProcess(request, action)
                 del cxp
                 data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
+            elif subpath.find('geo') >=0 :
+                context = str(subpath).replace('geo', '')
+                util_geo : UtilGeo = UtilGeo()
+                data, http_code = util_geo.send_request( request, context )
+                del util_geo
+                data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             else: 
                 data_response = {"message" : "Servicio POST no encontrado", "code": 404, "data": None}
                 http_code  = 404
-
         elif request.method == 'GET' :
             if str(subpath).find('docs/') >= 0 :
                 name_file = str(subpath).replace('docs/', '')
@@ -205,6 +214,12 @@ class Page :
                 data_response = render_template( 'create.html', rut='132334-rree-k' )
                 http_code  = 200
                 is_page = True
+            elif subpath.find('geo') >=0 :
+                context = str(subpath).replace('geo', '')
+                util_geo : UtilGeo = UtilGeo()
+                data, http_code = util_geo.send_request( request, context )
+                del util_geo
+                data_response = {"message" : SUCCESS_MSG, "code": SUCCESS_CODE, "data": data }
             else: 
                 data_response = {"message" : "Servicio GET no encontrado", "code": 404, "data": None}
                 http_code  = 404
