@@ -4,7 +4,7 @@ try:
     import os
     import pymysql.cursors
     from datetime import datetime
-    from flask import render_template
+    from flask import render_template, escape
 
 except ImportError:
 
@@ -129,7 +129,8 @@ class Ucc() :
                 http_code  = 200
                 return render_template( 'contract.html', type=strType, name=strName, content=strContent, id=strId, docId=strDoc, refId=strRef), http_code
             else :
-                data_response = {"message" : "Servicio POST /ucc/" + subpath + " no encontrado", "code": 404, "data": None}
+                safe_subpath = str(escape(str(subpath)))
+                data_response = {"message" : "Servicio POST /ucc/" + safe_subpath + " no encontrado", "code": 404, "data": None}
                 http_code  = 404
         elif request.method == 'GET' :
             if subpath.find('-') >= 0 :
