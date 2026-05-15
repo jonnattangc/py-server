@@ -64,4 +64,4 @@ def process_zlr(subpath):
     zlr = Irelez()
     data_response, http_code = zlr.request_process(request, str(subpath))
     del zlr
-    return data_response, http_code
+    return jsonify(data_response), http_code

@@ -9,6 +9,7 @@ try:
     import pymysql.cursors
     from datetime import datetime, timedelta
     from flask import jsonify
+    from markupsafe import escape
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[Irelez] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -114,9 +115,24 @@ class Irelez() :
             key = congig['geo']
         return key
 
+    def _sanitize_response_payload(self, payload):
+        if isinstance(payload, dict):
+            return {k: self._sanitize_response_payload(v) for k, v in payload.items()}
+        if isinstance(payload, list):
+            return [self._sanitize_response_payload(item) for item in payload]
+        if isinstance(payload, str):
+            return str(escape(payload))
+        return payload
+
+    def _normalize_subpath(self, subpath: str) -> str:
+        normalized = str(subpath).replace('\\', '/').lstrip('/')
+        normalized = normalized.replace('..', '')
+        return ''.join(ch for ch in normalized if ch.isalnum() or ch in '/-_.')
+
     def request_process(self, request, subpath ) :
+            safe_subpath = self._normalize_subpath(subpath)
             logging.info("========================================== /ZLR =============================================================" )
-            logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
+            logging.info("Reciv " + str(request.method) + " Contex: /" + str(safe_subpath) )
             logging.info("Reciv Header : " + str(request.headers) )
             logging.info("Reciv Data: " + str(request.data) )
             
@@ -124,9 +140,9 @@ class Irelez() :
             logging.info("-----> Authorization Rx: " + str(authorization) )
 
             config = self.get_config()
-            jwt_token = self.get_key_by_path(config, subpath)
+            jwt_token = self.get_key_by_path(config, safe_subpath)
 
-            url = config['url'] + str(subpath).replace('integration','').replace('production','')
+            url = config['url'] + str(safe_subpath).replace('integration','').replace('production','')
             logging.info("URL: " + str(url) )
 
             if jwt_token != None and jwt_token != '' :
@@ -160,10 +176,10 @@ class Irelez() :
                     diff = time.monotonic() - m1;
                 errorCode = resp.status_code
                 if resp.status_code == 200 :
-                    data_response = resp.json()
+                    data_response = self._sanitize_response_payload(resp.json())
                     logging.info("Response OK: " + str(data_response) )
                 else :
-                    data_response = resp.json()
+                    data_response = self._sanitize_response_payload(resp.json())
                     logging.info("Response NOK[" + str(resp.status_code) + "]: " + str( data_response ) )
             except Exception as e:
                 print("ERROR POST:", e)
