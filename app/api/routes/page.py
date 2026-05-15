@@ -1,8 +1,17 @@
-from flask import Blueprint, jsonify, request, render_template, send_from_directory
+from flask import Blueprint, jsonify, request, render_template, send_from_directory, escape
 import logging
 import os
 
 page_bp = Blueprint('page', __name__)
+
+def _escape_response_data(value):
+    if isinstance(value, dict):
+        return {k: _escape_response_data(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_escape_response_data(item) for item in value]
+    if isinstance(value, str):
+        return str(escape(value))
+    return value
 
 @page_bp.get('/page')
 def page_page():
@@ -13,7 +22,7 @@ def page_page():
     if is_page:
         return data_response, http_status
     else:
-        return jsonify(data_response), http_status
+        return jsonify(_escape_response_data(data_response)), http_status
 
 @page_bp.post('/page/csrf')
 def csrf_token():
@@ -33,7 +42,7 @@ def process_page(subpath):
     if is_page:
         return data_response, http_status
     else:
-        return jsonify(data_response), http_status
+        return jsonify(_escape_response_data(data_response)), http_status
 
 @page_bp.get('/page/image/<path:subpath>')
 def process_image(subpath):
