@@ -2,11 +2,8 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["feature/re-organizacion"]
   pull_request:
-    branches: ["main", "develop"]
-  #schedule:
-  #  - cron: '27 2 * * 5'
+    branches: ["main"]
 
 jobs:
 
@@ -28,7 +25,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=jonnattangc_py-server
+            -Dsonar.projectKey=py-server
             -Dsonar.organization=jonnattan-org
             -Dsonar.sources=app
             -Dsonar.tests=tests
@@ -83,7 +80,7 @@ jobs:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: [sonarcloud, gitguardian, codeql]
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
