@@ -54,7 +54,7 @@ class Sserpxelihc() :
         try :
             if self.isConnect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url, k.meta_data from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.environment = k.environment where p.client = 'chilexpress'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url, k.meta_data from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.environment = k.environment where p.client = 'cxp'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results :
@@ -85,7 +85,7 @@ class Sserpxelihc() :
             if self.isConnect() and self.environment != env:
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set environment=%s where client=%s"""
-                cursor.execute(sql, (env,'chilexpress'))
+                cursor.execute(sql, (env,'cxp'))
                 self.db.commit()
                 success = True
                 if self.environment != None :
@@ -189,7 +189,7 @@ class Sserpxelihc() :
                 if (request.method == 'GET' ) :
                     if ( subpath.find('agendadigital/') >= 0  ) :
                         key = '9c853753ce314c81934c4f966dad7755'
-                        url = 'https://services.wschilexpress.com/' + str(subpath)
+                        url = str(os.environ.get('CXP_SERVICES_URL', '')) + str(subpath)
                         headers = {'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/json' }
                         fecha = request.args.get('fecha', '-1')
                         if ( fecha != '-1' and subpath.find('GetArticulos') < 0 ) :

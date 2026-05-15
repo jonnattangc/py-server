@@ -42,7 +42,7 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
             "title": "dev.jonnattan.com — API",
             "description": (
                 "API personal experimental con integraciones a AWS, WhatsApp (Meta), "
-                "Atlassian, LLM/ML, Chilexpress, Zeleri, Gran Logia, OTP y más."
+                "Atlassian, LLM/ML, proxies de logística, Gran Logia, OTP y más."
             ),
             "version": "1.0.0",
             "contact": {
@@ -73,8 +73,8 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
             {"name": "EDR (Cifrado)", "description": "Cifrado/descifrado JWT con clave AES"},
             {"name": "Crypto / Mercado", "description": "Coordinador de depósitos bancarios y crypto"},
             {"name": "Dreams (Notificaciones)", "description": "Notificaciones de depósitos vía Slack"},
-            {"name": "CXP (Chilexpress)", "description": "Proxy hacia la API de Chilexpress"},
-            {"name": "ZLR (Zeleri)", "description": "Proxy hacia la API de Zeleri"},
+            {"name": "CXP", "description": "Proxy hacia la API de logística CXP"},
+            {"name": "ZLR", "description": "Proxy hacia la API de logística ZLR"},
             {"name": "Logia", "description": "Servicios de Gran Logia: login, grados y documentos"},
             {"name": "Mobile", "description": "Endpoints para aplicación móvil"},
         ]

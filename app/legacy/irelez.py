@@ -44,7 +44,7 @@ class Irelez() :
         try :
             if self.is_connect() :
                 cursor = self.db.cursor()
-                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'zeleri'"""
+                sql = """select p.environment, p.request, p.response, p.enabled, p.hash, p.id as id, k.coverage_key, k.ot_key, k.geo_key, k.base_url from `gral-purpose`.proxy p inner join `gral-purpose`.keys k on p.id = k.proxy_id and p.environment = k.environment where p.client = 'zlr'"""
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 for row in results:
@@ -74,7 +74,7 @@ class Irelez() :
             if self.is_connect() and self.environment != env:
                 cursor = self.db.cursor()
                 sql = """UPDATE proxy set environment=%s where client=%s"""
-                cursor.execute(sql, (env,'chilexpress'))
+                cursor.execute(sql, (env,'zlr'))
                 self.db.commit()
                 success = True
                 if self.environment != None :

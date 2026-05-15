@@ -420,22 +420,22 @@ Envía un mensaje genérico a Slack.
 
 ---
 
-### CXP (Chilexpress)
+### CXP
 
-Proxy transparente hacia la API de Chilexpress. El API key se inyecta automáticamente desde BD según la ruta.
+Proxy transparente hacia la API de logística CXP. El API key se inyecta automáticamente desde BD según la ruta.
 
 | Ruta | Key usada | Descripción |
 |---|---|---|
 | `rating/` o `Rating/` | `coverage_key` | Tarifas (con caché en BD) |
 | `transport-orders/` | `ot_key` | Órdenes de transporte |
 | `georeference/` | `geo_key` | Georreferencia |
-| `agendadigital/` | key hardcodeada | Agenda digital |
+| `agendadigital/` | key por env `CXP_SERVICES_URL` | Agenda digital |
 
 #### `GET /cxp/<subpath>`
 **Query params opcionales:** `RegionCode`, `type` (cobertura), `fecha` (agenda digital).
 
 #### `POST /cxp/<subpath>`
-**Body:** Payload nativo de Chilexpress. Puede ser modificado por `meta_data` almacenado en BD.
+**Body:** Payload nativo del proveedor. Puede ser modificado por `meta_data` almacenado en BD.
 
 #### `PUT /cxp/<subpath>`
 Reenvío PUT transparente.
@@ -444,14 +444,14 @@ Reenvío PUT transparente.
 
 | Código | Descripción |
 |---|---|
-| 4xx | Error retornado por Chilexpress (transparente) |
+| 4xx | Error retornado por el proveedor (transparente) |
 | 500 | `{ "statusCode": 500, "statusDescription": "Error interno Gw" }` |
 
 ---
 
-### ZLR (Zeleri)
+### ZLR
 
-Proxy hacia la API de Zeleri. Inyecta JWT Bearer según la ruta; si no hay key mapeada, usa el `Authorization` header recibido. Los prefijos `integration/` y `production/` son eliminados antes del reenvío.
+Proxy hacia la API de logística ZLR. Inyecta JWT Bearer según la ruta; si no hay key mapeada, usa el `Authorization` header recibido. Los prefijos `integration/` y `production/` son eliminados antes del reenvío.
 
 | Ruta | Key usada |
 |---|---|
@@ -467,7 +467,7 @@ Proxy hacia la API de Zeleri. Inyecta JWT Bearer según la ruta; si no hay key m
 
 | Código | Descripción |
 |---|---|
-| 4xx | Error retornado por Zeleri (transparente) |
+| 4xx | Error retornado por el proveedor (transparente) |
 | 500 | `{ "statusCode": 500, "statusDescription": "Error interno Gw" }` |
 
 ---
