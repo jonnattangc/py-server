@@ -10,7 +10,7 @@ try:
     import pymysql.cursors
     from datetime import datetime
     from app.legacy.otp import Otp
-    from flask import jsonify
+    from flask import jsonify, escape
     from app.legacy.utilllm import UtilLlm
 except ImportError:
     logging.error(ImportError)
@@ -791,7 +791,8 @@ class UtilWaza() :
             try :
                 if str(request.method) == 'GET' :
                     if str(request.args.get('hub.mode')) == 'subscribe' :
-                        data_response = str(request.args.get('hub.challenge'))
+                        challenge = str(request.args.get('hub.challenge', ''))
+                        data_response = str(escape(challenge))
                         verify = str(request.args.get('hub.verify_token'))
                         if verify == str(self.uuid) :
                             errorCode = 200
@@ -821,7 +822,7 @@ class UtilWaza() :
                         # Esto responde a la inscriopcion de un webhook de whatsapp
                         value = str(request.args.get('hub.challenge', '-1'))
                         if value != '-1' :
-                            data_response = str(value)
+                            data_response = str(escape(value))
                             logging.info("hub.challenge: " + str(data_response) )
                 else :
                     data_response = jsonify({'statusCode': 404, 'statusDescription': 'Metodo no disponible' })
