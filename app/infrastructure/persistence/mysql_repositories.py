@@ -14,11 +14,11 @@ class MySqlConnection(IDatabaseConnection):
     """Manages a single pymysql connection lifecycle."""
 
     def __init__(self, host=None, port=None, user=None, password=None, database=None):
-        self.host = host or os.environ.get('HOST_BD', 'dev.jonnattan.com')
-        self.port = port or int(os.environ.get('PORT_BD', 3306))
-        self.user = user or os.environ.get('USER_BD', '----')
-        self.password = password or os.environ.get('PASS_BD', '*****')
-        self.database = database or os.environ.get('SCHEMA_BD', '*****')
+        self.host = host or os.environ.get('HOST_BD', '')
+        self.port = port or int(os.environ.get('PORT_BD', -1))
+        self.user = user or os.environ.get('USER_BD', '')
+        self.password = password or os.environ.get('PASS_BD', '')
+        self.database = database or os.environ.get('SCHEMA_BD', '')
         self._db = None
 
     def connect(self) -> None:
