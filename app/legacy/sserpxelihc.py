@@ -5,6 +5,7 @@ try:
     import time
     import hashlib
     import json
+    import html
     import requests
     import pymysql.cursors
     from datetime import datetime, timedelta
@@ -16,6 +17,14 @@ except ImportError:
 
 
 class Sserpxelihc() :
+    def _escape_untrusted_response(self, value):
+            if isinstance(value, dict):
+                return {k: self._escape_untrusted_response(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [self._escape_untrusted_response(item) for item in value]
+            if isinstance(value, str):
+                return html.escape(value, quote=True)
+            return value
     db = None
 
     def __init__(self) :
@@ -208,7 +217,7 @@ class Sserpxelihc() :
                 logging.info("Key         : " + str(key) )
                 
                 if( resp.status_code == 200 ) :
-                    data_response = resp.json()
+                    data_response = self._escape_untrusted_response(resp.json())
                     logging.info("Response CXP OK: " + str( data_response ) )
                     # se actualiza en la BD s'olo si esta habilitado
                     if config['enabled'] and subpath.find('rating/api/v1.0/rates/business') >= 0 :
@@ -216,7 +225,7 @@ class Sserpxelihc() :
                         self.saveCache( str(request.get_json()), hash, str(data_response), config['id'] )
 
                 else :
-                    data_response = resp.json()
+                    data_response = self._escape_untrusted_response(resp.json())
                     logging.info("Response CXP NOK[" + str(resp.status_code) + "]: " + str( data_response ) )
 
                 logging.info("Time Response in " + str(diff) + " sec." )
