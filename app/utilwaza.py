@@ -7,6 +7,7 @@ try:
     import requests
     import base64
     import random
+    import re
     import pymysql.cursors
     from datetime import datetime
     from otp import Otp
@@ -63,10 +64,11 @@ class UtilWaza() :
     def saveMsgs( self, msg_rx, msg_tx, user, mobile ) :
         try :
             if self.db != None :
+                limpio : str = re.sub(r'[^a-zA-Z0-9 ]', '', str(msg_tx))
                 now = datetime.now()
                 cursor = self.db.cursor()
                 sql = """INSERT INTO whatsapp_messages (msg_rx, msg_tx, users, mobiles, create_at, update_at) VALUES(%s, %s, %s, %s, %s, %s)"""
-                cursor.execute(sql, (str(msg_rx), str(msg_tx), str(user), str(mobile), now.strftime("%Y/%m/%d %H:%M:%S"), now.strftime("%Y/%m/%d %H:%M:%S") ))
+                cursor.execute(sql, (str(msg_rx), limpio, str(user), str(mobile), now.strftime("%Y/%m/%d %H:%M:%S"), now.strftime("%Y/%m/%d %H:%M:%S") ))
                 self.db.commit()
         except Exception as e:
             print("ERROR BD:", e)
@@ -288,7 +290,28 @@ class UtilWaza() :
             success = False
         return success
 
-    def buildResponse(self, user, number, text_rx ) :
+    def get_family(self, mobile: str) :
+        father_name : str = None
+        son_name : str = None
+        parent : str = None
+        try :
+            if self.db != None :
+                cursor = self.db.cursor()
+                logging.info(f"-------->>>> mobile: {mobile}")
+                sql = """SELECT p.name AS parent_name, CASE WHEN p.user_type = 3 THEN 'Papá' WHEN p.user_type = 2 THEN 'Mamá' ELSE 'Pariente' END AS parent, h.name AS son, h.course AS course FROM user p INNER JOIN user h ON p.hijo = h.id WHERE p.mobile = %s"""
+                cursor.execute(sql, (f"+{mobile}", ))
+                results = cursor.fetchall()
+                for row in results:
+                    father_name = str(row['parent_name'])
+                    son_name = str(row['son'])
+                    parent = str(row['parent'])
+                    break
+        except Exception as e:
+            print("ERROR BD:", e)
+
+        return father_name, son_name, parent
+
+    def build_response(self, user, number, text_rx ) :
         response = ''
         try :
             if text_rx == "/validar" :
@@ -296,8 +319,12 @@ class UtilWaza() :
                 self.initValidate( user, number )
             else :
                 chat = UtilLlm()
-                response = chat.sendQuestion(text_rx)
-                response = response.replace('Hola', ('Hola ' + str(user)))
+                father_name, son_name, parent = self.get_family( number )
+                response = chat.send_question(text_rx, father_name, son_name, parent)
+                if father_name != None :
+                    response.replace('Hola', f"Hola {father_name}")
+                else :
+                    response = response.replace('Hola', ('Hola ' + str(user)))
                 response = response.replace('Wena', ('Wena ' + str(user)))
                 response = response.replace('* ','-')
                 response = response.replace('*','')
@@ -316,7 +343,7 @@ class UtilWaza() :
         try :
             if request_data != None :
                 chat = UtilLlm()
-                resp = chat.sendQuestion(request_data['mesagge'])
+                resp = chat.send_question(request_data['mesagge'], None, None, None)
                 resp = resp.replace('* ','-')
                 resp = resp.replace('*','')
                 response['result'] = resp
@@ -330,7 +357,7 @@ class UtilWaza() :
             return None
         return response, code
 
-    def markasReader( self, msg_id, number_id ) :
+    def markas_reader( self, msg_id, number_id ) :
         data_read_json = {
             'messaging_product' : 'whatsapp',
             'status'            : 'read',
@@ -613,16 +640,19 @@ class UtilWaza() :
         except Exception as e:
             print("ERROR Rescatando processMultiMediaMessage():", e)
 
-    def responseWazaMessage(self, change ) :
+    def response_waza_message(self, change ) :
 
         contacts = None
         statuses = None
         messages = None
+        metadata = None
+        field : str = None
 
         response = "Ok"
         code = 200
-
-        field = str(change['field'])
+        
+        if 'field' in change :
+            field = str(change['field'])
 
         if field == 'messages' :
             meta_msg = change['value']
@@ -630,23 +660,30 @@ class UtilWaza() :
             try :
                 contacts = meta_msg['contacts']
             except Exception as e:
-                # print("ERROR contacts:", e)
+                logging.warning(f"\"contacts\" field not found: {e}")
                 contacts = None
+            
+            try :
+                metadata = meta_msg['metadata']
+            except Exception as e:
+                logging.warning(f"\"metadata\" field not found: {e}")
+                metadata = None
+
             try :
                 statuses = meta_msg['statuses']
             except Exception as e:
-                # print("ERROR statuses:", e)
+                logging.warning(f"\"statuses\" field not found: {e}")
                 statuses = None
+
             try :
                 messages = meta_msg['messages']
             except Exception as e:
-                # print("ERROR messages:", e)
+                logging.warning(f"\"messages\" field not found: {e}")
                 messages = None
 
             if str(meta_msg['messaging_product']) == 'whatsapp' and statuses != None :
-                logging.info("Mensaje liberado a: " + str(statuses[0]['recipient_id']) )
-
-            if str(meta_msg['messaging_product']) == 'whatsapp' and contacts != None :
+                logging.info(f"Mensaje a {statuses[0]['recipient_id']} liberado..." )
+            elif str(meta_msg['messaging_product']) == 'whatsapp' and contacts != None :
                 number_id = meta_msg['metadata']['phone_number_id']
                 contact = contacts[0]
                 
@@ -662,16 +699,16 @@ class UtilWaza() :
                     response = "OK"
                 else :
                     msg_id = messages[0]['id']
-                    logging.info(f" Marco como leido, number_id[" + str(number_id) + "] name_wsuser[" + str(wsuser) + "] wsnumber[" + str(wsnumber) + "] msg_id[" + str(msg_id) + "]")
-                    self.markasReader( msg_id, number_id )
+                    logging.info(f"Readed Message Mark number_id[" + str(number_id) + "] name_wsuser[" + str(wsuser) + "] wsnumber[" + str(wsnumber) + "] msg_id[" + str(msg_id) + "]")
+                    self.markas_reader( msg_id, number_id )
                     msg_type = messages[0]['type']
                     if str(msg_type) == 'text'  :
                         msg_rx = messages[0]['text']['body']
-                        logging.info(f"Mensaje: {msg_rx}")
+                        logging.info(f"### Message Text: {msg_rx}")
                         if msg_rx == 'this is a text message' :
                             msg_rx = 'Esto es un mensaje de texto'
                         else :
-                            msg_tx = self.buildResponse( wsuser, wsnumber, msg_rx )
+                            msg_tx = self.build_response( wsuser, wsnumber, msg_rx )
                             self.responseTextMessage( wsnumber, msg_id, msg_tx, number_id )
                     elif str(msg_type) == 'request_welcome'  :
                         code = 200
@@ -684,7 +721,12 @@ class UtilWaza() :
                             obj_rx_type = messages[0][str(msg_type)]['mime_type']
                             obj_rx_id = messages[0][str(msg_type)]['id']
                             self.processMultiMediaMessage( obj_rx_type, obj_rx_id, number_id, wsnumber, wsuser )
-                
+            elif str(meta_msg['messaging_product']) == 'whatsapp' and metadata != None :
+                logging.info(f"Mensaje leido por {metadata['display_phone_number']}..." )
+            else :
+                logging.warning("No hay procesamiento para este tipo de mensaje")
+                response = "No hay procesamiento para este tipo de mensaje"
+                code = 200
         elif field != None :
             response = "No hay procesamiento para este tipo de mensaje: " + field
             code = 200
@@ -780,8 +822,8 @@ class UtilWaza() :
         return jsonify(dataTx), 200
 
     def requestProcess(self, request, subpath : str = None ) :
-            logging.info(f"================================== {subpath} -> {str(request.method)} ==================================")
-            logging.info("Reciv Header : " + str(request.headers) )
+            logging.info(f"================================== Init {str(request.method)} Path: {subpath} ==================================")
+            #logging.info("Reciv Header : " + str(request.headers) )
             #logging.info("Reciv Data: " + str(request.data) )
             #logging.info("Reciv Params: " + str(request.args) )
             # valores por defecto
@@ -815,9 +857,11 @@ class UtilWaza() :
                     else :
                         if str(request_data['object']) == 'whatsapp_business_account' :
                             entries = request_data['entry']
-                            logging.info(f"Entries: {entries}")
-                            message, errorCode = self.responseWazaMessage( entries[0]['changes'][0] )
+                            logging.info(f"Msg Entries: {entries}")
+                            message, errorCode = self.response_waza_message( entries[0]['changes'][0] )
                             data_response = jsonify({'statusCode': errorCode, 'statusDescription': str(message) })
+                        else :
+                            logging.info(f"Reciv Data: {request_data}")
                         # Esto responde a la inscriopcion de un webhook de whatsapp
                         value = str(request.args.get('hub.challenge', '-1'))
                         if value != '-1' :

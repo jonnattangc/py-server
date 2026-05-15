@@ -120,7 +120,7 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, origins=["http://192.168.1.10:3000","https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
+cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
 
 #===============================================================================
 # Redirige
@@ -402,13 +402,55 @@ def mobile_request_sms():
 
     return {'code': "OK" }, 200
 
+
+@app.route('/mobile/v1/<path:context>', methods=['POST','GET','PUT'])
+@csrf.exempt
+def mobile_heartbeats( context: str ):
+    logging.info("========================================== /MOBILE =============================================================" )        
+    logging.info(f"Method {request.method} Contex: {context} ")
+    #logging.info("Reciv Header : " + str(request.headers) )
+    #logging.info(f"Data: {request.data}")
+    data_rx : dict = None
+
+    if context != None and context.lower().find("/receive") >= 0:
+        url_base = os.environ.get('NOTIFICATION_URL', None)
+        api_key = os.environ.get('NOTIFICATION_API_KEY', None)
+        if url_base is None or api_key is None:
+            return {'code': "ERROR" }, 500
+        data_rx = request.get_json()
+        try :
+            url : str = f"{url_base}/slack"
+            logging.info("URL : " + url )
+            headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': str(api_key)
+            }
+            request_tx : dict = {
+                'type': 'clear',
+                'data': data_rx
+            }
+            response = requests.post(url, data = json.dumps(request_tx), headers = headers, timeout = 40)
+            if( response != None and response.status_code == 200 ) :
+                logging.info('Response Slack' + str( response ) )
+            elif( response != None and response.status_code != 200 ) :
+                logging.info("Response NOK" + str( response ) )
+            else :
+                logging.info("No se notifica nada por Slak")
+        except Exception as e:
+            logging.info("Response JSON: " + str( e ) )
+            print("ERROR POST:", e)
+
+    data_rx = {'status': 'ok'}
+    return jsonify(data_rx), 200
+
+
 @app.route('/mobile/<path:subpath>', methods=['POST','GET','PUT'])
 @auth.login_required
 @csrf.exempt
 def mobile_request_proccess( subpath: str ):
     logging.info("========================================== /MOBILE =============================================================" )        
     logging.info("Reciv " + str(request.method) + " Contex: /" + str(subpath) )
-    logging.info("Reciv Header : " + str(request.headers) )
+    # logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
     logger.info("Reciv solicitude endpoint: " + subpath )
     json = {}
