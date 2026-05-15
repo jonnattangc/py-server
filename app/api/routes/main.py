@@ -16,6 +16,28 @@ def catch_all(subpath):
 
 @main_bp.route('/infojonna', methods=['GET', 'POST'])
 def info_jonna():
+    """
+    Información del servidor y autor
+    ---
+    tags:
+      - Sistema
+    summary: Retorna datos del servidor y su propietario
+    responses:
+      200:
+        description: Datos del servidor
+        schema:
+          type: object
+          properties:
+            Servidor:
+              type: string
+              example: dev.jonnattan.com
+            Nombre:
+              type: string
+              example: Jonnattan Griffiths Catalan
+            Linkedin:
+              type: string
+              example: https://www.linkedin.com/in/jonnattan/
+    """
     logging.info("Reciv solicitude endpoint: /infojonna")
     return jsonify({
         "Servidor": "dev.jonnattan.com",
@@ -56,6 +78,39 @@ def mobile_page_delete():
 
 @main_bp.post('/mobile/sms')
 def mobile_request_sms():
+    """
+    Reenvía una notificación SMS vía servicio externo de Slack
+    ---
+    tags:
+      - Mobile
+    summary: Envía notificación de SMS a canal Slack
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          description: Payload libre que se reenvía al servicio de notificación
+          example:
+            message: "Código de verificación recibido"
+    responses:
+      200:
+        description: Notificación enviada correctamente
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+              example: OK
+      500:
+        description: Variables de entorno NOTIFICATION_URL o NOTIFICATION_API_KEY no configuradas
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+              example: ERROR
+    """
     from flask import request
     import json
     import requests

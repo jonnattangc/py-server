@@ -37,29 +37,52 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
 
     # Swagger / Flasgger config
     template = {
-        "openapi": "3.0.1",
+        "swagger": "2.0",
         "info": {
-            "title": "API Documentación",
-            "description": "Documentación de mi API con modelos compartidos",
-            "version": "1.0.0"
-        },
-        "components": {
-            "schemas": {
-                "MiModelo": {
-                    "type": "object",
-                    "properties": {
-                        "id": {"type": "integer", "example": 1},
-                        "nombre": {"type": "string", "example": "Juan Perez"}
-                    }
-                }
+            "title": "dev.jonnattan.com — API",
+            "description": (
+                "API personal experimental con integraciones a AWS, WhatsApp (Meta), "
+                "Atlassian, LLM/ML, Chilexpress, Zeleri, Gran Logia, OTP y más."
+            ),
+            "version": "1.0.0",
+            "contact": {
+                "name": "Jonnattan Griffiths",
+                "url": "https://www.linkedin.com/in/jonnattan/"
             }
-        }
+        },
+        "host": "dev.jonnattan.com",
+        "basePath": "/",
+        "schemes": ["https"],
+        "securityDefinitions": {
+            "BasicAuth": {
+                "type": "basic",
+                "description": "HTTP Basic Auth. Usuario y contraseña almacenados en MySQL (tabla oauth)."
+            },
+            "ApiKeyHeader": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "x-api-key",
+                "description": "API key enviada en el header x-api-key."
+            }
+        },
+        "tags": [
+            {"name": "Sistema", "description": "Health checks e información del servidor"},
+            {"name": "Mail", "description": "Lectura de correos bancarios via IMAP"},
+            {"name": "Waza (WhatsApp)", "description": "Webhook y operaciones de WhatsApp Business via Meta"},
+            {"name": "UCC (Usuarios / Documentos)", "description": "Gestión de usuarios y firma de documentos"},
+            {"name": "EDR (Cifrado)", "description": "Cifrado/descifrado JWT con clave AES"},
+            {"name": "Crypto / Mercado", "description": "Coordinador de depósitos bancarios y crypto"},
+            {"name": "Dreams (Notificaciones)", "description": "Notificaciones de depósitos vía Slack"},
+            {"name": "CXP (Chilexpress)", "description": "Proxy hacia la API de Chilexpress"},
+            {"name": "ZLR (Zeleri)", "description": "Proxy hacia la API de Zeleri"},
+            {"name": "Logia", "description": "Servicios de Gran Logia: login, grados y documentos"},
+            {"name": "Mobile", "description": "Endpoints para aplicación móvil"},
+        ]
     }
 
     app.config['SWAGGER'] = {
-        'title': 'API Documentación',
+        'title': 'dev.jonnattan.com — API',
         'uiversion': 3,
-        'openapi': '3.0.1',
         'specs_route': '/apidocs/',
         'doc_dir': os.path.join(Config.BASE_DIR, 'docs'),
         'static_url_path': '/flasgger_static',
@@ -72,8 +95,6 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
             }
         ],
         "headers": [],
-        "schemes": ["https"],
-        "static_lib_url": "https://unpkg.com/swagger-ui-dist@3/"
     }
 
     # Initialize extensions

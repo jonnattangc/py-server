@@ -9,15 +9,59 @@ edr_bp = Blueprint('edr', __name__)
 @auth.login_required
 def dernede_process(subpath):
     """
-    Procesa una solicitud a Dernede, un proveedor de servicios de API que se encarga de llamar a los servicios de API de terceros.
+    Servicio de cifrado/descifrado JWT con clave AES
     ---
+    tags:
+      - EDR (Cifrado)
+    summary: Cifra un payload JSON y lo retorna como JWT firmado con HMAC-SHA256
+    security:
+      - BasicAuth: []
     parameters:
-      - subpath: La ruta del servicio que se desea llamar.
+      - in: path
+        name: subpath
+        required: true
+        type: string
+        description: >
+          Cualquier ruta activa el cifrado. Usa `timeout` para simular latencia de 50 segundos.
+        example: encrypt
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          description: Cualquier objeto JSON a cifrar
+          example:
+            user: "jonnattan"
+            action: "login"
     responses:
       200:
-        description: La respuesta de la API de terceros.
+        description: Payload cifrado como JWT
+        schema:
+          type: object
+          properties:
+            jwt:
+              type: string
+              description: Token JWT firmado con la clave AES (env AES_KEY)
+              example: eyJhbGciOiJIUzI1NiJ9.eyJtZXNzYWdlIjp7InVzZXIiOiJqb25uYXR0YW4ifX0.abc123
       401:
-        description: No autorizado, este método se encuentra protegido por una autenticación básica.
+        description: Credenciales HTTP Basic Auth inválidas
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: invalid credentials
+      500:
+        description: Error interno al cifrar (clave AES no configurada o payload inválido)
+        schema:
+          type: object
+          properties:
+            statusCode:
+              type: integer
+              example: 500
+            statusDescription:
+              type: string
+              example: Error interno Gw
     """
     from app.legacy.dernede import Dernede
     import os

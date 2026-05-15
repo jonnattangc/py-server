@@ -11,15 +11,35 @@ check_bp = Blueprint('check', __name__)
 @auth.login_required
 def check_process():
     """
-    Checkea estado completo del sistema, incluyendo la configuración de la base de datos
+    Diagnóstico completo del sistema
     ---
+    tags:
+      - Sistema
+    summary: Verifica conectividad de base de datos y estado de componentes internos
     security:
-      - Basic Security: []
+      - BasicAuth: []
     responses:
       200:
-        description: Todos los sistemas funcionan correctamente
+        description: Diagnóstico exitoso
+        schema:
+          type: object
+          properties:
+            db:
+              type: string
+              description: Estado de la conexión a MySQL
+              example: ok
+            version:
+              type: string
+              description: Versión de la aplicación
+              example: "1.0.0"
       401:
-        description: No autorizado, este metodo se encutra protegido por una autenticación básica
+        description: Credenciales inválidas o ausentes
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: invalid credentials
     """
     from app.legacy.check import Checker
     checker = Checker()
