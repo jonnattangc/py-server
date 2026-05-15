@@ -138,9 +138,9 @@ class AwsUtil() :
             }
 
         except Exception as e:
-            print("[S3] ERROR AWS:", e)
+            logging.exception("[S3] ERROR AWS")
             code = 403
-            data = { 'ref': 'Error: ' + str(e) }
+            data = { 'ref': 'Error interno' }
 
         # se borra el archivo temporal
         if os.path.exists(file_path):
@@ -170,9 +170,9 @@ class AwsUtil() :
                 logging.info("[SES] Send Email: " + str(response) )
                 retorno = {'ref': str(ref) }
         except Exception as e:
-            print("[SES] ERROR AWS:", e)
+            logging.exception("[SES] ERROR AWS")
             status = 500
-            retorno = { 'ref': 'Error: ' + str(e) }
+            retorno = { 'ref': 'Error interno' }
         diff = time.monotonic_ns() - m1
         logging.info("[SES] Servicio Ejecutado en " + str(diff) + " msec." )
         return retorno, status 
@@ -204,9 +204,9 @@ class AwsUtil() :
                 logging.info("[PINTPOINT] Response Send OTP: " + str(response) )
                 retorno = {'ref': str(ref) }
         except Exception as e:
-            print("[PINTPOINT] ERROR AWS:", e)
+            logging.exception("[PINTPOINT] ERROR AWS")
             status = 500
-            retorno = { 'ref': 'Error: ' + str(e) }
+            retorno = { 'ref': 'Error interno' }
         del otpProccesor
         diff = time.monotonic_ns() - m1
         logging.info("[PINTPOINT] Servicio Ejecutado en " + str(diff) + " nsec." )
