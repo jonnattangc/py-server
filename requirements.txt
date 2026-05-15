@@ -39,3 +39,5 @@ Werkzeug==3.1.6
 WTForms==3.2.1
 zipp==3.23.0
 cryptography==42.0.5
+pytest==8.3.2
+pytest-cov==5.0.0

@@ -40,13 +40,13 @@ RUN cd /home/jonnattan && \
     chmod -R 755 /home/jonnattan  && \
     chown -R jonnattan:jonnattan /home/jonnattan
 
-WORKDIR /home/jonnattan/app
+WORKDIR /home/jonnattan
 
 USER jonnattan
 
 EXPOSE 8085
 
-CMD [ "python", "http-server.py", "8085"]
+CMD [ "python", "app/http-server.py", "8085"]
 # python3 http-server.py 8085
 # CMD [ "tail", "-f", "/home/jonnattan/requirements.txt" ]
 # pip freeze > requirements.txt
