@@ -1,15 +1,22 @@
-import logging
-import sys
-import os
+#!/usr/bin/python
+try:
+    import logging
+    import sys
+    import os
 
-from flask import Flask
-from flasgger import Swagger
-from werkzeug.middleware.proxy_fix import ProxyFix
+    from flask import Flask
+    from flasgger import Swagger
+    from werkzeug.middleware.proxy_fix import ProxyFix
 
-from app.config import Config
-from app.extensions import csrf, auth, cors
-from app.api import register_blueprints
+    from app.config import Config
+    from app.extensions import csrf, auth, cors
+    from app.api import register_blueprints
 
+except ImportError:
+
+    logging.error(ImportError)
+    print((os.linesep * 2).join(['[_INIT_] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
+    sys.exit(-2)
 
 def configure_logging():
     fmt = '%(asctime)s %(levelname)s : %(message)s'
@@ -39,18 +46,17 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
     template = {
         "swagger": "2.0",
         "info": {
-            "title": "dev.jonnattan.com — API",
+            "title": "api.jonna.cl — API",
             "description": (
-                "API personal experimental con integraciones a AWS, WhatsApp (Meta), "
-                "Atlassian, LLM/ML, proxies de logística, Gran Logia, OTP y más."
+                "API personal experimental con integraciones a otros servicios."
             ),
             "version": "1.0.0",
             "contact": {
                 "name": "Jonnattan Griffiths",
-                "url": "https://www.linkedin.com/in/jonnattan/"
+                "url": "https://www.jonna.cl"
             }
         },
-        "host": "dev.jonnattan.com",
+        "host": "api.jonna.cl",
         "basePath": "/",
         "schemes": ["https"],
         "securityDefinitions": {
@@ -81,7 +87,7 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
     }
 
     app.config['SWAGGER'] = {
-        'title': 'dev.jonnattan.com — API',
+        'title': 'api.jonnattan.cl — API',
         'uiversion': 3,
         'specs_route': '/apidocs/',
         'doc_dir': os.path.join(Config.BASE_DIR, 'docs'),

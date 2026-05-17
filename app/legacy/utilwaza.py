@@ -8,10 +8,12 @@ try:
     import base64
     import random
     import pymysql.cursors
+    from html import escape
     from datetime import datetime
     from app.legacy.otp import Otp
-    from flask import jsonify, escape
+    from flask import jsonify
     from app.legacy.utilllm import UtilLlm
+
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[UtilWaza] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
