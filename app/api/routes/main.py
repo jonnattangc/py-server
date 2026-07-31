@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, redirect, render_template, send_from_directory
+from app.extensions import csrf
 import logging
 import os
+import time
 
 main_bp = Blueprint('main', __name__)
 
@@ -58,6 +60,18 @@ def google_app_terms():
 @main_bp.get('/privacity')
 def google_app_privacity():
     return render_template('privacity.html')
+
+@main_bp.post('/vscode')
+@csrf.exempt
+def vscode_fuction():
+    from flask import request
+    m1 = time.monotonic_ns()
+    logging.info("========================================== INFO IDE =============================================================")
+    logging.info("Reciv " + str(request.method) + " Contex: /vscode")
+    logging.info("Reciv Header : " + str(request.headers))
+    logging.info("Reciv Data: " + str(request.data))
+    logging.info(f"========================================== {((time.monotonic_ns() - m1)/1_000_000_000)} sec. ==========================================")
+    return jsonify({}), 200
 
 @main_bp.get('/mobile/privacidad')
 def mobile_tc():

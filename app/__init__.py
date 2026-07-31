@@ -108,7 +108,7 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
     cors.init_app(
         app,
         origins=[
-            "http://192.168.1.10:3000",
+            "http://192.168.1.5:3000",
             "https://dev.jonnattan.com",
             "https://api.jonnattan.cl",
             "https://www.jonna.cl",
