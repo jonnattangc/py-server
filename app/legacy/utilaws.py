@@ -165,7 +165,7 @@ class AwsUtil() :
         try :
             logging.info("[SES] Send mail to: " + str(mail) + " ref: " + str(ref))
             if self.ses != None :
-                data = 'From: soporte@jonnattan.com\nTo: ' + str(mail) + '\nSubject: Jonnattan SpA OTP\nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary="NextPart"\n\n--NextPart\nContent-Type: text/plain\n\nLa OTP para sistema es: ' + str(otp) + '.\n\n'
+                data = 'From: info@jonna.cl\nTo: ' + str(mail) + '\nSubject: Jonnattan SpA OTP\nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary="NextPart"\n\n--NextPart\nContent-Type: text/plain\n\nLa OTP para sistema es: ' + str(otp) + '.\n\n'
                 response = self.ses.send_raw_email(Destinations=[str(mail),], RawMessage={ 'Data': data,  },)
                 logging.info("[SES] Send Email: " + str(response) )
                 retorno = {'ref': str(ref) }

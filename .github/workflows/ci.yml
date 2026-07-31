@@ -30,6 +30,8 @@ jobs:
             -Dsonar.sources=app
             -Dsonar.tests=tests
             -Dsonar.projectBaseDir=.
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.jacoco.reportPaths=jacoco.xml
 
   gitguardian:
     name: GitGuardian Scan

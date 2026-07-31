@@ -8,10 +8,12 @@ try:
     import base64
     import random
     import pymysql.cursors
+    from html import escape
     from datetime import datetime
     from app.legacy.otp import Otp
-    from flask import jsonify, escape
+    from flask import jsonify
     from app.legacy.utilllm import UtilLlm
+
 except ImportError:
     logging.error(ImportError)
     print((os.linesep * 2).join(['[UtilWaza] Error al buscar los modulos:', str(sys.exc_info()[1]), 'Debes Instalarlos para continuar', 'Deteniendo...']))
@@ -716,9 +718,9 @@ class UtilWaza() :
                 'to'                : str(number),
                 'type'              : 'template',
                 'template': {
-                   'name': "otp_dicode",
+                   'name': "otp_jonna",
                    'language': {
-                       'code': 'es_MX',
+                       'code': 'es_CL',
                        'policy': 'deterministic'
                     },
                     'components': [
@@ -746,7 +748,7 @@ class UtilWaza() :
                 }
             }
             # logging.info("Request Trx " + str(data_json) )
-            url = f"https://graph.facebook.com/{self.waza_api_version}/303918009478174/messages"
+            url = f"https://graph.facebook.com/{self.waza_api_version}/1000578373146449/messages"
             logging.info("URL : " + url )
             response = requests.post(url, data = json.dumps(data_json), headers = self.headers, timeout = 40)
             if response.status_code != None :

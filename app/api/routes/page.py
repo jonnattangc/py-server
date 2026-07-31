@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request, render_template, send_from_directory, escape
+from flask import Blueprint, jsonify, request, render_template, send_from_directory
+from markupsafe import escape
 import logging
 import os
 
@@ -33,7 +34,21 @@ def csrf_token():
     logging.info("# Reciv Cookies :\n" + str(request.cookies))
     return render_template('galery.html')
 
-@page_bp.route('/page/<path:subpath>', methods=['GET', 'POST', 'PUT'])
+from app.extensions import csrf
+@page_bp.post('/page/<path:subpath>')
+@csrf.exempt
+def post_page(subpath):
+    from app.legacy.pageprocessor import Page
+    page = Page()
+    data_response, http_status, is_page = page.request_process(request, str(subpath))
+    del page
+    if is_page:
+        return data_response, http_status
+    else:
+        return jsonify(_escape_response_data(data_response)), http_status
+
+
+@page_bp.route('/page/<path:subpath>', methods=['GET', 'PUT'])
 def process_page(subpath):
     from app.legacy.pageprocessor import Page
     page = Page()
