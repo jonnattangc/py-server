@@ -4,16 +4,15 @@ services:
       image: jonnattangc/pyserver:1.0.0
       build:
         dockerfile: Dockerfile
-      restart: none
+      restart: always
       volumes:
         - ./app:/home/jonnattan/app
       ports:
         - "8085:8085"
-      #  - "5000:5000"
       env_file:
         - ../envs/file.env
       networks:
         - db-net
-      command: tail -f /home/jonnattan/app/extensions.py 
+      #command: tail -f /home/jonnattan/app/extensions.py 
 networks:
   db-net:

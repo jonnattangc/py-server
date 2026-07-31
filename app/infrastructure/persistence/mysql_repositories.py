@@ -63,7 +63,7 @@ class UserRepository(IUserRepository):
             if not self._db.is_connected():
                 self._db.connect()
             cursor = self._db.raw.cursor()
-            cursor.execute("select * from oauth where username = %s", (username,))
+            cursor.execute("select * from basic_auth where username = %s", (username,))
             results = cursor.fetchall()
             for row in results:
                 password_bd = str(row['password'])
@@ -85,7 +85,7 @@ class UserRepository(IUserRepository):
 
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             cursor.execute(
-                "INSERT INTO oauth (create_at, username, password) VALUES (%s, %s, %s)",
+                "INSERT INTO basic_auth (created_at, username, password) VALUES (%s, %s, %s)",
                 (now, username, password_hash),
             )
             self._db.raw.commit()
