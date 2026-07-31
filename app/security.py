@@ -39,7 +39,7 @@ class Security() :
         try :
             if self.db != None :
                 cursor = self.db.cursor()
-                sql = """select * from oauth where username = %s"""
+                sql = """select * from basic_auth where username = %s"""
                 cursor.execute(sql, (username))
                 results = cursor.fetchall()
                 for row in results:
@@ -59,9 +59,10 @@ class Security() :
         try :
             if self.db != None :
                 cursor = self.db.cursor()
-                sql = """INSERT INTO oauth (create_at, username, password ) VALUES(%s, %s, %s)"""
+                sql = """INSERT INTO basic_auth (created_at, updated_at, username, password ) VALUES(%s, %s, %s, %s)"""
                 now = datetime.now()
-                cursor.execute(sql, (now.strftime("%Y-%m-%d %H:%M:%S"), user, generate_password_hash(password)))
+                date_str : str = now.strftime("%Y-%m-%d %H:%M:%S")
+                cursor.execute(sql, (date_str, date_str, user, generate_password_hash(password)))
                 self.db.commit()
         except Exception as e:
             print("ERROR BD:", e)

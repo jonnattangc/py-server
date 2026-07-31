@@ -120,7 +120,7 @@ csrf = CSRFProtect()
 csrf.init_app(app)
 
 auth = HTTPBasicAuth()
-cors = CORS(app, origins=["https://dev.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
+cors = CORS(app, origins=["https://dev.jonnattan.com", "https://www.jonnattan.com", "https://api.jonnattan.cl","https://www.jonna.cl","https://www.jonnattan.cl","https://api.jonna.cl","https://docs.jonna.cl","https://docs.jonnattan.cl"])
 
 #===============================================================================
 # Redirige
@@ -362,6 +362,30 @@ def mobile_page_delete() :
     logging.info("Reciv Header : " + str(request.headers) )
     logging.info("Reciv Data: " + str(request.data) )
     return render_template( 'delete.html', email='', sendSolicitude="Solicitud de borrado ejecutada" )
+
+@app.post('/page/users/save')
+@csrf.exempt
+def user_add():
+    code : int = 200
+    msg : str = "OK"
+    try :
+        logging.info("========================================== /User =============================================================" )        
+        logging.info("Reciv " + str(request.method) + " Contex: /page/user")
+        logging.info("Reciv Header : " + str(request.headers) )
+        logging.info("Reciv Data: " + str(request.data) )
+        sec : Security = Security()
+        data : dict = request.get_json()    
+        logging.info("Data: " + str( data ) )
+        sec.generateUser( data['username'], data['password'] )
+        del sec
+    except Exception as e:
+        logging.info("Response JSON: " + str( e ) )
+        code = 501
+        msg = "ERROR"
+        print("ERROR POST:", e)
+
+    return {'code': msg }, code
+    
 
 @app.post('/mobile/sms')
 @csrf.exempt
