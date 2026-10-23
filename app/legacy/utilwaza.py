@@ -41,7 +41,7 @@ class UtilWaza() :
             eschema = str(os.environ.get('SCHEMA_BD','*****'))
             self.db = pymysql.connect(host=host, port=port, 
                 user=user_bd, password=pass_bd, database=eschema, 
-                cursorclass=pymysql.cursors.DictCursor)
+                cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
             self.headers = {'Content-Type': 'application/json', 'Authorization': str(self.bearer_token) }
         except Exception as e :
             print("ERROR BD:", e)
@@ -54,7 +54,7 @@ class UtilWaza() :
     def connect( self ) :
         try:
             if self.db == None :
-                self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor)
+                self.db = pymysql.connect(host=self.host, user=self.user, password=self.password, database=self.database,cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None
@@ -340,6 +340,9 @@ class UtilWaza() :
         }
         url = 'https://graph.facebook.com/' + str(self.waza_api_version) + '/' + str(number_id) + '/messages'
         logging.info(f"Marking Message: {url}" )
+        logging.info(f"Headers Message: {dict(self.headers, Authorization='Bearer ***')}" )
+        logging.info(f"Data Message: {data_read_json}" )
+
         try :
             response = requests.post(url, data = json.dumps(data_read_json), headers = self.headers, timeout = 40)
             data_response = response.json()

@@ -116,6 +116,7 @@ def create_app(template_dir=None, static_dir=None) -> Flask:
             "https://api.jonna.cl",
             "https://docs.jonna.cl",
             "https://docs.jonnattan.cl",
+            "https://www.jonnattan.com",
         ]
     )
 

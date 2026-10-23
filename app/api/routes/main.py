@@ -61,6 +61,18 @@ def google_app_terms():
 def google_app_privacity():
     return render_template('privacity.html')
 
+# La pagina de tesoreria vive en el front (website/jonnapp/public/tesorero.html).
+# Estas rutas solo redirigen para no romper enlaces antiguos hacia la API.
+TESORERIA_URL = 'https://www.jonnattan.com/tesorero'
+
+@main_bp.get('/tesoreria')
+def tesoreria_page():
+    return redirect(TESORERIA_URL), 302
+
+@main_bp.get('/tesorero')
+def tesorero_page():
+    return redirect(TESORERIA_URL), 302
+
 @main_bp.post('/vscode')
 @csrf.exempt
 def vscode_fuction():

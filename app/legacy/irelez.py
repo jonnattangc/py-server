@@ -28,7 +28,7 @@ class Irelez() :
             eschema = str(os.environ.get('SCHEMA_BD','*****'))
             self.db = pymysql.connect(host=host, port=port, 
                 user=user_bd, password=pass_bd, database=eschema, 
-                cursorclass=pymysql.cursors.DictCursor)
+                cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
         except Exception as e :
             print("ERROR __init__:", e)
             self.db = None

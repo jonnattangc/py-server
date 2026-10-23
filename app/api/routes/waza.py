@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
 import logging
 import os
+from app.extensions import csrf
 
 waza_bp = Blueprint('waza', __name__)
 
 @waza_bp.route('/waza', methods=['POST', 'GET', 'PUT'])
+@csrf.exempt
 def wazasp_1():
     """
     Webhook principal de WhatsApp Business (Meta)
@@ -75,9 +77,13 @@ def wazasp_1():
               type: string
               example: Error en la ejecucion del servicio
     """
+    if request.args.get('hub.mode') == 'subscribe' and request.args.get('hub.verify_token') == os.getenv('UUID_WZ'):
+        logging.info('Webhook verificado')
+        return request.args.get('hub.challenge'), 200
     return process_waze_msg()
 
 @waza_bp.route('/waza/<path:subpath>', methods=['POST', 'GET', 'PUT'])
+@csrf.exempt
 def wazasp_2(subpath: str):
     """
     Operaciones de WhatsApp: OTP, marketing y mensajes LLM
