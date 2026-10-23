@@ -31,7 +31,7 @@ class Otp() :
             eschema = str(os.environ.get('SCHEMA_BD','*****'))
             self.db = pymysql.connect(host=host, port=port, 
                 user=user_bd, password=pass_bd, database=eschema, 
-                cursorclass=pymysql.cursors.DictCursor)
+                cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
         except Exception as e :
             print("ERROR __init__:", e)
             self.db = None
@@ -43,7 +43,7 @@ class Otp() :
     def connect( self ) :
         try:
             if self.db == None :
-                self.db = pymysql.connect(host=self.host,user=self.user,password=self.password,database=self.database,cursorclass=pymysql.cursors.DictCursor)
+                self.db = pymysql.connect(host=self.host,user=self.user,password=self.password,database=self.database,cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
         except Exception as e :
             print("ERROR BD:", e)
             self.db = None

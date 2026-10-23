@@ -31,7 +31,7 @@ class UtilAttlasian() :
             eschema = str(os.environ.get('SCHEMA_BD','*****'))
             self.db = pymysql.connect(host=host, port=port, 
                 user=user_bd, password=pass_bd, database=eschema, 
-                cursorclass=pymysql.cursors.DictCursor)
+                cursorclass=pymysql.cursors.DictCursor, charset='utf8mb4')
             #self.confluence = Confluence(  url=self.attlasian_url, username=self.attlasian_user, password=self.jira_api_token, cloud=True)
         except Exception as e :
             print("ERROR BD:", e)

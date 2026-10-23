@@ -30,6 +30,7 @@ class MySqlConnection(IDatabaseConnection):
                 password=self.password,
                 database=self.database,
                 cursorclass=pymysql.cursors.DictCursor,
+                charset='utf8mb4',
             )
         except Exception as exc:
             logging.error("MySqlConnection connect error: %s", exc)
